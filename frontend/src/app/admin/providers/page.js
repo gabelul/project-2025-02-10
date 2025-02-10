@@ -31,35 +31,27 @@ const providers = [
     type: "Primary",
     isEnabled: true,
   },
-  {
-    id: 2,
-    name: "Anthropic",
-    status: "degraded",
-    uptime: "98.5%",
-    responseTime: "200ms",
-    models: 3,
-    type: "Secondary",
-    isEnabled: true,
-  },
-  // Add more providers...
+  // ... other providers
 ]
-
-const statusStyles = {
-  operational: "bg-green-500/10 text-green-500",
-  degraded: "bg-yellow-500/10 text-yellow-500",
-  down: "bg-red-500/10 text-red-500"
-}
 
 function ProviderCard({ provider, onStatusChange }) {
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleStatusToggle = (checked) => {
-    onStatusChange(provider.id, checked)
-    toast({
-      title: checked ? "Provider Enabled" : "Provider Disabled",
-      description: `${provider.name} has been ${checked ? "enabled" : "disabled"}`,
-    })
+  const handleStatusToggle = async (checked) => {
+    try {
+      await onStatusChange(provider.id, checked)
+      toast({
+        title: checked ? "Provider Enabled" : "Provider Disabled",
+        description: `${provider.name} has been ${checked ? "enabled" : "disabled"}`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update provider status",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -74,7 +66,7 @@ function ProviderCard({ provider, onStatusChange }) {
               <p className="text-sm text-muted-foreground">{provider.type}</p>
             </div>
           </div>
-          <Badge className={statusStyles[provider.status]}>
+          <Badge variant={provider.status === "operational" ? "success" : "destructive"}>
             {provider.status}
           </Badge>
         </div>
@@ -123,6 +115,11 @@ export default function ProvidersPage() {
     status: "all",
     type: "all"
   })
+
+  const handleStatusChange = async (id, status) => {
+    // Implement status change logic
+    console.log(`Provider ${id} status changed to ${status}`)
+  }
 
   const filteredProviders = providers.filter(provider => {
     if (filter.search && !provider.name.toLowerCase().includes(filter.search.toLowerCase())) {
@@ -199,10 +196,7 @@ export default function ProvidersPage() {
           <ProviderCard
             key={provider.id}
             provider={provider}
-            onStatusChange={(id, status) => {
-              // Handle status change
-              console.log(`Provider ${id} status changed to ${status}`)
-            }}
+            onStatusChange={handleStatusChange}
           />
         ))}
       </div>
