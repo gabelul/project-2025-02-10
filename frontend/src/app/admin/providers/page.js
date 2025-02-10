@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,8 +12,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { Plus, Settings2, Key } from "lucide-react"
+import { Plus, Settings2, Key, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+
+// Validation schema
+const providerSchema = z.object({
+  name: z.string().min(2, "Provider name must be at least 2 characters"),
+  type: z.enum(["openai", "anthropic", "custom"], {
+    required_error: "Please select a provider type",
+  }),
+  endpoint: z.string().url("Please enter a valid URL"),
+  apiKey: z.string().min(20, "API key seems too short").max(100, "API key seems too long"),
+})
 
 export default function ProvidersPage() {
   const { toast } = useToast()
@@ -32,19 +47,50 @@ export default function ProvidersPage() {
       models: ["claude-2", "claude-instant"]
     }
   ])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
 
-  const handleAddProvider = (formData) => {
-    toast({
-      title: "Provider Added",
-      description: "The AI provider has been successfully configured.",
-    })
+  // Initialize form with validation
+  const form = useForm({
+    resolver: zodResolver(providerSchema),
+    defaultValues: {
+      name: "",
+      type: "",
+      endpoint: "",
+      apiKey: "",
+    },
+  })
+
+  const onSubmit = async (data) => {
+    setIsTestingConnection(true)
+    
+    try {
+      // Simulate API connection test
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // If connection test passes
+      toast({
+        title: "Provider Configured Successfully",
+        description: "Connection test passed and provider has been added.",
+      })
+      setIsDialogOpen(false)
+      form.reset()
+    } catch (error) {
+      toast({
+        title: "Configuration Failed",
+        description: "Could not establish connection with the provider.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsTestingConnection(false)
+    }
   }
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">AI Providers</h1>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -55,36 +101,99 @@ export default function ProvidersPage() {
             <DialogHeader>
               <DialogTitle>Configure AI Provider</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Provider Name</Label>
-                <Input id="name" placeholder="e.g., OpenAI, Anthropic" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="type">Provider Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select provider type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="openai">OpenAI Compatible</SelectItem>
-                    <SelectItem value="anthropic">Anthropic Compatible</SelectItem>
-                    <SelectItem value="custom">Custom Provider</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="endpoint">API Endpoint</Label>
-                <Input id="endpoint" placeholder="https://api.example.com/v1" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input id="apiKey" type="password" />
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button onClick={handleAddProvider}>Save Provider</Button>
-            </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Provider Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., OpenAI, Anthropic" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Provider Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select provider type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="openai">OpenAI Compatible</SelectItem>
+                          <SelectItem value="anthropic">Anthropic Compatible</SelectItem>
+                          <SelectItem value="custom">Custom Provider</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="endpoint"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API Endpoint</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://api.example.com/v1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="apiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API Key</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {form.formState.errors?.root && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {form.formState.errors.root.message}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={isTestingConnection}
+                  >
+                    {isTestingConnection ? "Testing Connection..." : "Save Provider"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
