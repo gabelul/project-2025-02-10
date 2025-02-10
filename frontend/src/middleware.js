@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server'
 
 export function middleware(request) {
-  // Check if the request is for the admin section
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    const authToken = request.cookies.get('auth-token')
+    const session = request.cookies.get('session')
     
-    if (!authToken) {
-      // Redirect to login page
+    if (!session) {
       return NextResponse.redirect(new URL('/', request.url))
     }
 
     try {
-      const userData = JSON.parse(authToken.value)
+      const userData = JSON.parse(session.value)
       
-      // Basic role checking
       if (!userData.role) {
         return NextResponse.redirect(new URL('/', request.url))
       }

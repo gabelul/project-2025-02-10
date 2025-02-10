@@ -3,21 +3,27 @@ import { auth } from '@/lib/auth'
 
 export async function POST(request) {
   try {
+    // Parse request body
     const body = await request.json()
-    const { email, password } = body
-
-    const userData = auth.validateCredentials(email, password)
     
-    if (!userData) {
+    if (!body.email || !body.password) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: 'Email and password are required' },
+        { status: 400 }
       )
     }
 
-    // Set cookies for server-side auth
-    const response = NextResponse.json(userData)
-    response.cookies.set('auth-token', JSON.stringify(userData), {
+    // Attempt login
+    const userData = await auth.login(body.email, body.password)
+    
+    // Create the response with user data
+    const response = NextResponse.json({
+      success: true,
+      user: userData
+    })
+
+    // Set auth cookie
+    response.cookies.set('session', JSON.stringify(userData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -27,10 +33,14 @@ export async function POST(request) {
     return response
 
   } catch (error) {
-    console.error('Login error:', error)
+    console.error('Login error:', error.message)
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { 
+        success: false,
+        error: error.message || 'Authentication failed' 
+      },
+      { status: 401 }
     )
   }
 }

@@ -6,6 +6,7 @@ export const ROLES = {
   VIEWER: 'viewer'
 }
 
+// Test users database
 const USERS = {
   'admin@example.com': { password: 'admin123', role: ROLES.ADMIN },
   'editor@example.com': { password: 'editor123', role: ROLES.EDITOR },
@@ -13,45 +14,15 @@ const USERS = {
 }
 
 export const auth = {
-  validateCredentials: (email, password) => {
+  login: async (email, password) => {
     const user = USERS[email]
-    if (user && user.password === password) {
-      const userData = {
-        email,
-        role: user.role,
-        timestamp: new Date().toISOString()
-      }
-      return userData
+    if (!user || user.password !== password) {
+      throw new Error('Invalid credentials')
     }
-    return null
-  },
-
-  setSession: (userData) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('user', JSON.stringify(userData))
-    }
-  },
-
-  getSession: () => {
-    if (typeof window !== 'undefined') {
-      const data = localStorage.getItem('user')
-      return data ? JSON.parse(data) : null
-    }
-    return null
-  },
-
-  clearSession: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user')
-    }
-  },
-
-  checkRole: (requiredRole) => {
-    const user = auth.getSession()
-    if (!user) return false
     
-    if (user.role === ROLES.ADMIN) return true
-    if (user.role === ROLES.EDITOR && requiredRole === ROLES.VIEWER) return true
-    return user.role === requiredRole
+    return {
+      email,
+      role: user.role
+    }
   }
 }

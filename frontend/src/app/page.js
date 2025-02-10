@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Shield, User } from "lucide-react"
 import Link from "next/link"
-import { auth } from "@/lib/auth"
 
 const TEST_ACCOUNTS = [
   { email: 'admin@example.com', password: 'admin123', role: 'Admin' },
@@ -45,16 +44,17 @@ export default function HomePage() {
         throw new Error(data.error || 'Login failed')
       }
 
-      // Store user data in local storage
-      auth.setSession(data)
-
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${data.role.toUpperCase()}`,
-      })
-      
-      router.push('/admin')
+      if (data.success) {
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${data.user.role.toUpperCase()}`,
+        })
+        router.push('/admin')
+      } else {
+        throw new Error(data.error || 'Login failed')
+      }
     } catch (error) {
+      console.error('Login error:', error)
       toast({
         title: "Login failed",
         description: error.message,
