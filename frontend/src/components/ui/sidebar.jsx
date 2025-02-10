@@ -1,9 +1,12 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { 
   ChevronRight,
   LayoutDashboard,
   Settings,
@@ -125,28 +128,28 @@ const navigationItems = {
 
 export function MainSidebar({ className, isCollapsed: defaultCollapsed = false }) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
-  const pathname = React.useRef("/admin")
+  const pathname = usePathname()
   const { theme, setTheme } = useTheme()
 
   const NavButton = React.forwardRef(({ item, ...props }, ref) => {
     const button = (
       <Button
         ref={ref}
-        variant={pathname.current === item.href ? "secondary" : "ghost"}
+        variant={pathname === item.href ? "secondary" : "ghost"}
         className={cn(
           "w-full justify-start transition-colors",
           isCollapsed ? "justify-center px-2" : "px-2",
-          pathname.current === item.href && "bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/25",
+          pathname === item.href && "bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/25",
           "hover:bg-accent/50 dark:hover:bg-accent/50",
           "group relative"
         )}
         asChild
         {...props}
       >
-        <a href={item.href} className="flex items-center gap-2">
+        <Link href={item.href} className="flex items-center gap-2">
           <item.icon className={cn(
             "h-4 w-4 transition-colors",
-            pathname.current === item.href 
+            pathname === item.href 
               ? "text-primary dark:text-primary" 
               : "text-muted-foreground group-hover:text-foreground"
           )} />
@@ -160,7 +163,7 @@ export function MainSidebar({ className, isCollapsed: defaultCollapsed = false }
               {item.badge}
             </span>
           )}
-        </a>
+        </Link>
       </Button>
     )
 
