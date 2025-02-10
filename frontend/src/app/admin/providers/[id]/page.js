@@ -6,8 +6,6 @@ import { ProviderDetail } from "@/components/providers/provider-detail"
 import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertCircle } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 function ProviderDetailSkeleton() {
   return (
@@ -32,37 +30,31 @@ function ProviderDetailSkeleton() {
   )
 }
 
-function ErrorDisplay({ message }) {
-  return (
-    <>
-      <AdminBreadcrumb 
-        items={[
-          { label: "Providers", href: "/admin/providers" },
-          { label: "Error" }
-        ]} 
-      />
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{message}</AlertDescription>
-      </Alert>
-    </>
-  )
-}
-
 export default function ProviderPage() {
   const params = useParams()
   const id = params?.id
 
   if (!id) {
-    return <ErrorDisplay message="Invalid provider ID" />
+    return (
+      <div className="space-y-6">
+        <AdminBreadcrumb 
+          items={[
+            { label: "Providers", href: "/admin/providers" },
+            { label: "Error" }
+          ]} 
+        />
+        <Card>
+          <CardContent className="p-6">
+            Invalid provider ID
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <Suspense fallback={<ProviderDetailSkeleton />}>
-        <ProviderDetail id={id} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<ProviderDetailSkeleton />}>
+      <ProviderDetail id={id} />
+    </Suspense>
   )
 }

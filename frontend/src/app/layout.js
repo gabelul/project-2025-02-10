@@ -11,12 +11,12 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <ThemeProvider 
           attribute="class" 
-          defaultTheme="system" 
-          enableSystem 
+          defaultTheme="dark" 
+          enableSystem={false}
           disableTransitionOnChange
           suppressHydrationWarning
         >
-          <div className="min-h-screen bg-background">
+          <div className="flex min-h-screen bg-background">
             {children}
           </div>
         </ThemeProvider>
