@@ -8,7 +8,9 @@ import {
   Search,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  ChevronRight,
+  Home
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -17,13 +19,45 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Breadcrumbs } from "@/components/ui/breadcrumb"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
+
+  // Generate breadcrumb items from pathname
+  const generateBreadcrumbs = () => {
+    const segments = pathname.split('/').filter(Boolean)
+    const items = []
+
+    // Always include home
+    items.push({
+      label: 'Home',
+      href: '/admin',
+      icon: Home
+    })
+
+    // Add segments
+    segments.slice(1).forEach((segment, index) => {
+      items.push({
+        label: segment.charAt(0).toUpperCase() + segment.slice(1),
+        href: `/admin/${segments.slice(1, index + 2).join('/')}`,
+      })
+    })
+
+    return items
+  }
+
+  const breadcrumbs = generateBreadcrumbs()
 
   return (
     <html lang="en">
@@ -37,7 +71,7 @@ export default function AdminLayout({ children }) {
             <div className="flex-1">
               {/* Top Navigation */}
               <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background px-6">
-                <div className="flex flex-1 items-center space-x-2">
+                <div className="flex flex-1 items-center space-x-4">
                   <div className="w-[200px] flex items-center space-x-2">
                     <Search className="h-4 w-4 text-muted-foreground" />
                     <Input 
@@ -46,7 +80,27 @@ export default function AdminLayout({ children }) {
                       className="h-8 w-[150px] lg:w-[180px]" 
                     />
                   </div>
-                  <Breadcrumbs />
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      {breadcrumbs.map((item, index) => (
+                        <BreadcrumbItem key={item.href}>
+                          {index === breadcrumbs.length - 1 ? (
+                            <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                          ) : (
+                            <>
+                              <BreadcrumbLink href={item.href} className="flex items-center">
+                                {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                                {item.label}
+                              </BreadcrumbLink>
+                              <BreadcrumbSeparator>
+                                <ChevronRight className="h-4 w-4" />
+                              </BreadcrumbSeparator>
+                            </>
+                          )}
+                        </BreadcrumbItem>
+                      ))}
+                    </BreadcrumbList>
+                  </Breadcrumb>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button variant="ghost" size="icon">
