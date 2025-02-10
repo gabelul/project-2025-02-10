@@ -13,11 +13,13 @@ import { PerformanceTab } from "./tabs/performance-tab"
 import { ModelsTab } from "./tabs/models-tab"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 
 export function ProviderDetail({ id }) {
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [providerName, setProviderName] = useState("")
   const router = useRouter()
   const { toast } = useToast()
 
@@ -38,6 +40,7 @@ export function ProviderDetail({ id }) {
       try {
         const data = await getProvider(id)
         form.reset(data)
+        setProviderName(data.name)
       } catch (err) {
         setError(err.message)
         toast({
@@ -58,16 +61,31 @@ export function ProviderDetail({ id }) {
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error Loading Provider</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <>
+        <AdminBreadcrumb 
+          items={[
+            { label: "Providers", href: "/admin/providers" },
+            { label: "Error" }
+          ]} 
+        />
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error Loading Provider</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </>
     )
   }
 
   return (
     <div className="space-y-6">
+      <AdminBreadcrumb 
+        items={[
+          { label: "Providers", href: "/admin/providers" },
+          { label: providerName || `Provider ${id}` }
+        ]} 
+      />
+      
       <Tabs defaultValue="config" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="config">Configuration</TabsTrigger>

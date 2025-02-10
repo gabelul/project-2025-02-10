@@ -3,7 +3,8 @@
 import { Suspense } from "react"
 import { useParams } from "next/navigation"
 import { ProviderDetail } from "@/components/providers/provider-detail"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
+import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -11,6 +12,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 function ProviderDetailSkeleton() {
   return (
     <div className="space-y-6">
+      <AdminBreadcrumb 
+        items={[
+          { label: "Providers", href: "/admin/providers" },
+          { label: "Loading..." }
+        ]} 
+      />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
@@ -21,26 +28,25 @@ function ProviderDetailSkeleton() {
           </Card>
         ))}
       </div>
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <Skeleton className="h-4 w-[200px]" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
     </div>
   )
 }
 
 function ErrorDisplay({ message }) {
   return (
-    <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription>
-        {message}
-      </AlertDescription>
-    </Alert>
+    <>
+      <AdminBreadcrumb 
+        items={[
+          { label: "Providers", href: "/admin/providers" },
+          { label: "Error" }
+        ]} 
+      />
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{message}</AlertDescription>
+      </Alert>
+    </>
   )
 }
 
