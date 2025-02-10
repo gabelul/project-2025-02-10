@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { providerFormSchema } from "@/lib/validation/provider-schema"
+import { Form } from "@/components/ui/form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 import { ConfigurationTab } from "./tabs/configuration-tab"
@@ -92,19 +92,6 @@ export function ProviderDetail({ id }) {
 
   if (!mounted) return null
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-[200px]" />
-        <Card>
-          <CardContent className="p-6">
-            <Skeleton className="h-[400px]" />
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <AdminBreadcrumb 
@@ -114,8 +101,8 @@ export function ProviderDetail({ id }) {
         ]} 
       />
 
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs defaultValue="config">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="config">Configuration</TabsTrigger>
@@ -124,7 +111,7 @@ export function ProviderDetail({ id }) {
             </TabsList>
 
             <TabsContent value="config">
-              <ConfigurationTab form={form} isLoading={isLoading} />
+              <ConfigurationTab isLoading={isLoading} />
             </TabsContent>
 
             <TabsContent value="performance">
@@ -141,8 +128,8 @@ export function ProviderDetail({ id }) {
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </div>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   )
 }

@@ -1,16 +1,18 @@
 "use client"
 
+import { useState } from "react"
+import { useFormContext } from "react-hook-form"
+import { Eye, EyeOff, Globe, Shield } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { Eye, EyeOff, Globe, Shield, Gauge } from "lucide-react"
-import { useState } from "react"
 
-export function ConfigurationTab({ form, isLoading }) {
+export function ConfigurationTab({ isLoading }) {
   const [showApiKey, setShowApiKey] = useState(false)
+  const form = useFormContext()
 
   return (
     <div className="space-y-6">
@@ -32,7 +34,11 @@ export function ConfigurationTab({ form, isLoading }) {
               <FormItem>
                 <FormLabel>Provider Name</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} {...field} />
+                  <Input 
+                    placeholder="Enter provider name"
+                    disabled={isLoading} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -46,7 +52,11 @@ export function ConfigurationTab({ form, isLoading }) {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} {...field} />
+                  <Input 
+                    placeholder="Enter provider description"
+                    disabled={isLoading} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -63,6 +73,7 @@ export function ConfigurationTab({ form, isLoading }) {
                   <FormControl>
                     <Input
                       type={showApiKey ? "text" : "password"}
+                      placeholder="Enter API key"
                       disabled={isLoading}
                       {...field}
                     />
