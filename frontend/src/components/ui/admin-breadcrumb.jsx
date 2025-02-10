@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, Home } from "lucide-react"
+import { Home } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
@@ -17,22 +16,20 @@ export function AdminBreadcrumb({ items = [] }) {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="/admin">
+            <Link href="/admin" className="flex items-center">
               <Home className="h-4 w-4" />
             </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         {items.map((item, index) => (
           <BreadcrumbItem key={index}>
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-4 w-4" />
-            </BreadcrumbSeparator>
+            <BreadcrumbSeparator />
             {item.href ? (
               <BreadcrumbLink asChild>
                 <Link href={item.href}>{item.label}</Link>
               </BreadcrumbLink>
             ) : (
-              <BreadcrumbPage>{item.label}</BreadcrumbPage>
+              <span className="text-foreground">{item.label}</span>
             )}
           </BreadcrumbItem>
         ))}

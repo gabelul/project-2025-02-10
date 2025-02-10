@@ -54,10 +54,22 @@ const BreadcrumbSeparator = ({ children, className, ...props }) => (
     className={cn("[&>svg]:size-3.5", className)}
     {...props}
   >
-    {children ?? <ChevronRight />}
+    {children ?? <ChevronRight className="h-4 w-4" />}
   </li>
 )
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
+
+const BreadcrumbEllipsis = ({ className, ...props }) => (
+  <span
+    role="presentation"
+    aria-hidden="true"
+    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    {...props}
+  >
+    &#8230;
+  </span>
+)
+BreadcrumbEllipsis.displayName = "BreadcrumbEllipsis"
 
 export {
   Breadcrumb,
@@ -65,4 +77,5 @@ export {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
+  BreadcrumbEllipsis,
 }

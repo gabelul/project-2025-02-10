@@ -10,12 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 function ProviderDetailSkeleton() {
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb 
-        items={[
-          { label: "Providers", href: "/admin/providers" },
-          { label: "Loading..." }
-        ]} 
-      />
+      <div className="mb-6">
+        <Skeleton className="h-8 w-[200px]" />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
