@@ -9,12 +9,12 @@ import {
   MonitorDot,
   Activity,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 
-export function Sidebar({ className }) {
+export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
 
@@ -47,9 +47,8 @@ export function Sidebar({ className }) {
 
   return (
     <div className={cn(
-      "relative flex flex-col border-r transition-all duration-300",
-      collapsed ? "w-16" : "w-64",
-      className
+      "flex flex-col border-r bg-card",
+      collapsed ? "w-16" : "w-64"
     )}>
       {/* Logo Section */}
       <div className="flex h-[60px] items-center px-4 border-b">
@@ -70,7 +69,7 @@ export function Sidebar({ className }) {
               item.current
                 ? "bg-secondary text-secondary-foreground"
                 : "hover:bg-secondary/50",
-              collapsed && "justify-center"
+              collapsed && "justify-center px-2"
             )}
           >
             <item.icon className="h-4 w-4" />
