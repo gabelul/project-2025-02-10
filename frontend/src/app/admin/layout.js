@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { ThemeProvider } from "next-themes"
 import { Sidebar } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
@@ -9,8 +10,6 @@ import {
   Sun,
   Moon,
   Laptop,
-  ChevronRight,
-  Home
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -33,20 +32,18 @@ import Link from "next/link"
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   // Generate breadcrumb items from pathname
   const generateBreadcrumbs = () => {
     const segments = pathname.split('/').filter(Boolean)
     const items = []
 
-    // Always include home
     items.push({
-      label: 'Home',
+      label: 'Admin',
       href: '/admin',
-      icon: Home
     })
 
-    // Add segments
     segments.slice(1).forEach((segment, index) => {
       items.push({
         label: segment.charAt(0).toUpperCase() + segment.slice(1),
@@ -64,12 +61,9 @@ export default function AdminLayout({ children }) {
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex min-h-screen">
-            {/* Sidebar */}
-            <Sidebar />
+            <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
-            {/* Main Content */}
             <div className="flex-1">
-              {/* Top Navigation */}
               <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background px-6">
                 <div className="flex flex-1 items-center space-x-4">
                   <div className="w-[200px] flex items-center space-x-2">
@@ -86,14 +80,12 @@ export default function AdminLayout({ children }) {
                         <BreadcrumbItem key={item.href}>
                           {index === breadcrumbs.length - 1 ? (
                             <span className="flex items-center text-muted-foreground">
-                              {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                               {item.label}
                             </span>
                           ) : (
                             <>
                               <BreadcrumbLink asChild>
-                                <Link href={item.href} className="flex items-center">
-                                  {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                                <Link href={item.href}>
                                   {item.label}
                                 </Link>
                               </BreadcrumbLink>
@@ -139,8 +131,7 @@ export default function AdminLayout({ children }) {
                 </div>
               </header>
 
-              {/* Page Content */}
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 p-6">{children}</main>
             </div>
           </div>
         </ThemeProvider>
