@@ -2,18 +2,31 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { providerFormSchema } from "@/lib/validation/provider-schema"
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Save, Loader2 } from "lucide-react"
 
 export function ProviderDetail({ id }) {
   const router = useRouter()
@@ -21,7 +34,6 @@ export function ProviderDetail({ id }) {
   const [isLoading, setIsLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  // Ensure component is mounted before rendering form
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -30,19 +42,29 @@ export function ProviderDetail({ id }) {
     resolver: zodResolver(providerFormSchema),
     defaultValues: {
       name: "",
+      description: "",
       apiKey: "",
       baseUrl: "https://api.provider.com/v1",
-      environment: "production",
-      settings: {
-        rateLimit: 1000,
-        timeout: 30000,
-        retryAttempts: 3,
+      version: "v1",
+      environment: "development",
+      timeout: 30000,
+      retryAttempts: 3,
+      rateLimit: {
+        enabled: true,
+        requestsPerMinute: 1000,
+        burstLimit: 10
       },
       security: {
-        enableRateLimiting: false,
         enableIPWhitelist: false,
         ipWhitelist: "",
         enableRequestLogging: true,
+        enableRateLimiting: true,
+        requireAuthentication: true
+      },
+      models: [],
+      advanced: {
+        customHeaders: {},
+        maxConcurrentRequests: 10
       }
     }
   })
@@ -66,117 +88,227 @@ export function ProviderDetail({ id }) {
     }
   }
 
-  // Don't render until mounted to prevent hydration mismatch
-  if (!mounted) {
-    return null
-  }
+  if (!mounted) return null
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-bold">Provider Configuration</h1>
-          </div>
-          <p className="text-muted-foreground">
-            Configure and monitor provider settings
-          </p>
-        </div>
-      </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Provider Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="My Provider" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Describe your provider..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-      <div className="space-y-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Tabs defaultValue="general" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
-              </TabsList>
+        <Card>
+          <CardHeader>
+            <CardTitle>API Configuration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="apiKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Key</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <TabsContent value="general">
-                <Card className="p-6">
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Provider Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            <FormField
+              control={form.control}
+              name="baseUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Base URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://api.provider.com/v1" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                    <FormField
-                      control={form.control}
-                      name="apiKey"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>API Key</FormLabel>
-                          <FormControl>
-                            <Input type="password" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Your provider API key for authentication
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            <FormField
+              control={form.control}
+              name="version"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Version</FormLabel>
+                  <FormControl>
+                    <Input placeholder="v1" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                    {/* ... other general fields ... */}
+            <FormField
+              control={form.control}
+              name="environment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Environment</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select environment" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="development">Development</SelectItem>
+                      <SelectItem value="staging">Staging</SelectItem>
+                      <SelectItem value="production">Production</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="timeout"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Timeout (ms)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="retryAttempts"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Retry Attempts</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="rateLimit.enabled"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Rate Limiting</FormLabel>
+                    <FormDescription>
+                      Enable rate limiting for this provider
+                    </FormDescription>
                   </div>
-                </Card>
-              </TabsContent>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-              <TabsContent value="security">
-                <Card className="p-6">
-                  <div className="space-y-4">
-                    {/* ... security fields ... */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Security Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="security.enableIPWhitelist"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">IP Whitelist</FormLabel>
+                    <FormDescription>
+                      Restrict access to specific IP addresses
+                    </FormDescription>
                   </div>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-            <div className="mt-6 flex justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
-    </div>
+            <FormField
+              control={form.control}
+              name="security.enableRequestLogging"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Request Logging</FormLabel>
+                    <FormDescription>
+                      Log all API requests for monitoring
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save Provider"}
+        </Button>
+      </form>
+    </Form>
   )
 }
