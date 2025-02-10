@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Shield, User, AlertCircle } from "lucide-react"
+import { Loader2, Shield, User, AlertCircle, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 const TEST_ACCOUNTS = [
@@ -22,6 +22,7 @@ export default function LoginPage() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -30,7 +31,8 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    setError("") // Clear any previous errors
+    setError("")
+    setSuccess(false)
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -47,12 +49,29 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed')
       }
 
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${data.user.role.toUpperCase()}`,
-      })
+      // Show success state
+      setSuccess(true)
       
-      router.push('/admin')
+      // Show success toast
+      toast({
+        title: "Login successful! 🎉",
+        description: `Welcome back, ${data.user.role.toUpperCase()}`,
+        variant: "success",
+      })
+
+      // Show redirecting toast
+      setTimeout(() => {
+        toast({
+          title: "Redirecting...",
+          description: "Taking you to your dashboard",
+        })
+      }, 500)
+
+      // Delay redirect slightly to show success state
+      setTimeout(() => {
+        router.push('/admin')
+      }, 1000)
+
     } catch (error) {
       setError(error.message)
       toast({
@@ -70,7 +89,8 @@ export default function LoginPage() {
       email: account.email,
       password: account.password
     })
-    setError("") // Clear any errors when selecting a test account
+    setError("")
+    setSuccess(false)
     toast({
       title: "Test Account Selected",
       description: `${account.role} account credentials filled`,
@@ -94,6 +114,13 @@ export default function LoginPage() {
             </Alert>
           )}
 
+          {success && (
+            <Alert className="bg-green-50 text-green-700 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <AlertDescription>Login successful! Redirecting...</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -102,14 +129,15 @@ export default function LoginPage() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => {
-                  setError("") // Clear error on input change
+                  setError("")
+                  setSuccess(false)
                   setFormData(prev => ({
                     ...prev,
                     email: e.target.value
                   }))
                 }}
                 required
-                className={error ? "border-red-500" : ""}
+                className={error ? "border-red-500" : success ? "border-green-500" : ""}
               />
             </div>
 
@@ -120,14 +148,15 @@ export default function LoginPage() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => {
-                  setError("") // Clear error on input change
+                  setError("")
+                  setSuccess(false)
                   setFormData(prev => ({
                     ...prev,
                     password: e.target.value
                   }))
                 }}
                 required
-                className={error ? "border-red-500" : ""}
+                className={error ? "border-red-500" : success ? "border-green-500" : ""}
               />
             </div>
 
@@ -142,13 +171,18 @@ export default function LoginPage() {
 
             <Button 
               type="submit" 
-              className="w-full"
-              disabled={isLoading}
+              className={`w-full ${success ? 'bg-green-500 hover:bg-green-600' : ''}`}
+              disabled={isLoading || success}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...
+                </>
+              ) : success ? (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Success!
                 </>
               ) : (
                 "Sign in"
