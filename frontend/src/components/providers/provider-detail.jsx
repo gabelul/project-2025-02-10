@@ -6,11 +6,14 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { providerFormSchema } from "@/lib/validation/provider-schema"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 import { ConfigurationTab } from "./tabs/configuration-tab"
 import { PerformanceTab } from "./tabs/performance-tab"
 import { ModelsTab } from "./tabs/models-tab"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function ProviderDetail({ id }) {
   const [mounted, setMounted] = useState(false)
@@ -38,8 +41,7 @@ export function ProviderDetail({ id }) {
         ipWhitelist: "",
         enableRequestLogging: true,
         enableRateLimiting: true
-      },
-      models: []
+      }
     }
   })
 
@@ -65,7 +67,7 @@ export function ProviderDetail({ id }) {
     loadProvider()
   }, [id, form, toast])
 
-  async function onSubmit(data) {
+  const onSubmit = async (data) => {
     try {
       const response = await fetch(`/api/providers/${id}`, {
         method: 'PUT',
@@ -90,6 +92,19 @@ export function ProviderDetail({ id }) {
 
   if (!mounted) return null
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-[200px]" />
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="h-[400px]" />
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <AdminBreadcrumb 
@@ -100,25 +115,33 @@ export function ProviderDetail({ id }) {
       />
 
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Tabs defaultValue="config" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="config">Configuration</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="models">Models</TabsTrigger>
-          </TabsList>
+        <div className="space-y-6">
+          <Tabs defaultValue="config">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="config">Configuration</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="models">Models</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="config">
-            <ConfigurationTab form={form} isLoading={isLoading} />
-          </TabsContent>
+            <TabsContent value="config">
+              <ConfigurationTab form={form} isLoading={isLoading} />
+            </TabsContent>
 
-          <TabsContent value="performance">
-            <PerformanceTab providerId={id} />
-          </TabsContent>
+            <TabsContent value="performance">
+              <PerformanceTab providerId={id} />
+            </TabsContent>
 
-          <TabsContent value="models">
-            <ModelsTab providerId={id} form={form} />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="models">
+              <ModelsTab providerId={id} />
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
       </form>
     </div>
   )
