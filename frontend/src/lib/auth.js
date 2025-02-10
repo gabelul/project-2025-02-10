@@ -1,19 +1,20 @@
 "use client"
 
-const ROLES = {
+export const ROLES = {
   ADMIN: 'admin',
   EDITOR: 'editor',
   VIEWER: 'viewer'
 }
 
-export const TEST_USERS = {
+// Test user database (replace with real authentication in production)
+const USERS = {
   'admin@example.com': { password: 'admin123', role: ROLES.ADMIN },
   'editor@example.com': { password: 'editor123', role: ROLES.EDITOR },
   'viewer@example.com': { password: 'viewer123', role: ROLES.VIEWER }
 }
 
 export function validateCredentials(email, password) {
-  const user = TEST_USERS[email]
+  const user = USERS[email]
   if (!user || user.password !== password) {
     return null
   }

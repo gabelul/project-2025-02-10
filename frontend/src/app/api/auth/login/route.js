@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-// Test users database
+// Test users database (replace with real authentication in production)
 const USERS = {
   'admin@example.com': { password: 'admin123', role: 'admin' },
   'editor@example.com': { password: 'editor123', role: 'editor' },
@@ -10,8 +10,6 @@ const USERS = {
 export async function POST(request) {
   try {
     const body = await request.json()
-    console.log('Login attempt:', { email: body.email }) // Log without password
-
     const { email, password } = body
 
     if (!email || !password) {
@@ -34,13 +32,13 @@ export async function POST(request) {
       role: user.role
     }
 
-    // Create the response with user data
+    // Create response with user data
     const response = NextResponse.json({
       success: true,
       user: userData
     })
 
-    // Set auth cookie
+    // Set secure session cookie
     response.cookies.set('session', JSON.stringify(userData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -53,7 +51,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
-      { error: 'Authentication failed: ' + error.message },
+      { error: 'Authentication failed' },
       { status: 500 }
     )
   }
