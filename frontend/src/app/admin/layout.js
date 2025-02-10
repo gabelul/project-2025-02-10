@@ -1,14 +1,19 @@
 "use client"
 
+import { ThemeProvider } from "@/components/providers/theme-provider"
 import Link from "next/link"
 import { MonitorDot } from "lucide-react"
-import { ThemeProvider } from "next-themes"
 
 export default function AdminLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="dark" 
+          enableSystem={false}
+          disableTransitionOnChange
+        >
           <div className="flex min-h-screen bg-background">
             <aside className="w-64 border-r bg-card">
               <div className="flex h-[60px] items-center px-4 border-b">
@@ -17,7 +22,6 @@ export default function AdminLayout({ children }) {
                   <span className="font-semibold">Admin Portal</span>
                 </Link>
               </div>
-              {/* Sidebar content */}
             </aside>
             
             <main className="flex-1 overflow-y-auto">
