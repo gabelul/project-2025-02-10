@@ -96,6 +96,23 @@ export default function AdminDashboard() {
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="providers" className="space-y-4">
+          <Card className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Active Providers</h3>
+              <Link href="/admin/providers">
+                <Button>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Manage Providers
+                </Button>
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {/* Provider summary content */}
+            </div>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   )
