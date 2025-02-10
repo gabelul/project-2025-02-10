@@ -8,14 +8,17 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={`${inter.className} min-h-screen bg-background antialiased`}>
+      <body className={`${inter.className} min-h-screen antialiased`}>
         <ThemeProvider 
           attribute="class" 
           defaultTheme="system" 
-          enableSystem 
+          enableSystem
           disableTransitionOnChange
+          suppressHydrationWarning
         >
-          {children}
+          <div className="min-h-screen bg-background">
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>

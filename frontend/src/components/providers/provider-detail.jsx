@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,6 +19,12 @@ export function ProviderDetail({ id }) {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component is mounted before rendering form
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const form = useForm({
     resolver: zodResolver(providerFormSchema),
@@ -58,6 +64,11 @@ export function ProviderDetail({ id }) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return null
   }
 
   return (
