@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from "@/hooks/use-toast"
 import { Download, Upload, Save, Loader2 } from "lucide-react"
+import { PermissionGate } from "@/components/ui/permission-gate"
+import { PERMISSIONS } from "@/lib/auth"
 
 // Add saveProviderConfig function
 async function saveProviderConfig(data) {
@@ -29,6 +31,7 @@ export default function ProviderDetailPage({ params }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [backupInProgress, setBackupInProgress] = useState(false)
+  const [userRole, setUserRole] = useState('editor') // Get from auth context
   const { toast } = useToast()
 
   const form = useForm({
@@ -119,121 +122,150 @@ export default function ProviderDetailPage({ params }) {
 
   return (
     <div className="space-y-6 p-8">
-      {/* Header with Backup Controls */}
+      {/* Header with Role-Based Actions */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Provider Configuration</h1>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={backupInProgress}
+          <PermissionGate
+            permission={PERMISSIONS.PROVIDER.EXPORT}
+            userRole={userRole}
           >
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <div className="relative">
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-              id="import-config"
-            />
             <Button
               variant="outline"
-              onClick={() => document.getElementById('import-config').click()}
+              onClick={handleExport}
               disabled={backupInProgress}
             >
-              <Upload className="mr-2 h-4 w-4" />
-              Import
+              <Download className="mr-2 h-4 w-4" />
+              Export
             </Button>
-          </div>
+          </PermissionGate>
+
+          <PermissionGate
+            permission={PERMISSIONS.PROVIDER.IMPORT}
+            userRole={userRole}
+          >
+            <div className="relative">
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+                id="import-config"
+              />
+              <Button
+                variant="outline"
+                onClick={() => document.getElementById('import-config').click()}
+                disabled={backupInProgress}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+              </Button>
+            </div>
+          </PermissionGate>
         </div>
       </div>
 
-      {/* Form with enhanced validation */}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Configuration Fields */}
-          <Card className="p-6">
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Provider Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter provider name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Add other configuration fields as needed */}
-            </div>
-          </Card>
+      {/* Configuration Tabs with Role-Based Access */}
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <PermissionGate
+            permission={PERMISSIONS.PROVIDER.CONFIGURE}
+            userRole={userRole}
+          >
+            <TabsTrigger value="configuration">Configuration</TabsTrigger>
+          </PermissionGate>
+          <PermissionGate
+            permission={PERMISSIONS.PROVIDER.MANAGE_SECURITY}
+            userRole={userRole}
+          >
+            <TabsTrigger value="security">Security</TabsTrigger>
+          </PermissionGate>
+        </TabsList>
 
-          {/* Security Settings */}
+        {/* Overview Tab - Accessible to all */}
+        <TabsContent value="overview">
           <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Security Settings</h3>
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="securitySettings.enableRateLimiting"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <div>
-                      <FormLabel>Rate Limiting</FormLabel>
-                      <FormDescription>
-                        Enable request rate limiting
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* ... Overview content ... */}
           </Card>
+        </TabsContent>
 
-          {/* Backup Schedule */}
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Backup Settings</h3>
-            <FormField
-              control={form.control}
-              name="backupSchedule"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Backup Schedule</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select backup frequency" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="never">Never</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Automatically backup provider configuration
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-          </Card>
+        {/* Configuration Tab - Protected */}
+        <TabsContent value="configuration">
+          <PermissionGate
+            permission={PERMISSIONS.PROVIDER.CONFIGURE}
+            userRole={userRole}
+            showError
+          >
+            <Card className="p-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Provider Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter provider name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Add other configuration form fields as needed */}
+                </form>
+              </Form>
+            </Card>
+          </PermissionGate>
+        </TabsContent>
 
+        {/* Security Tab - Protected */}
+        <TabsContent value="security">
+          <PermissionGate
+            permission={PERMISSIONS.PROVIDER.MANAGE_SECURITY}
+            userRole={userRole}
+            showError
+          >
+            <Card className="p-6">
+              <h3 className="text-lg font-medium mb-4">Security Settings</h3>
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="securitySettings.enableRateLimiting"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between">
+                      <div>
+                        <FormLabel>Rate Limiting</FormLabel>
+                        <FormDescription>
+                          Enable request rate limiting
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Card>
+          </PermissionGate>
+        </TabsContent>
+      </Tabs>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={() => router.back()}>
+          Cancel
+        </Button>
+        
+        <PermissionGate
+          permission={PERMISSIONS.PROVIDER.EDIT}
+          userRole={userRole}
+        >
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
@@ -247,8 +279,8 @@ export default function ProviderDetailPage({ params }) {
               </>
             )}
           </Button>
-        </form>
-      </Form>
+        </PermissionGate>
+      </div>
     </div>
   )
 }
