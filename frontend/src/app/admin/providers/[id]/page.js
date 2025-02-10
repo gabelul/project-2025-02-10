@@ -2,6 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,10 +37,48 @@ const performanceData = [
   { time: '20:00', responseTime: 190, errorRate: 0.9, cost: 16 },
 ]
 
+// Form validation schema
+const providerFormSchema = z.object({
+  apiKey: z.string().min(1, "API Key is required"),
+  baseUrl: z.string().url("Must be a valid URL"),
+  environment: z.enum(["production", "staging", "development"]),
+  rateLimit: z.number().min(0).optional(),
+  ipWhitelist: z.string().optional()
+})
+
 export default function ProviderDetailPage({ params }) {
   const router = useRouter()
   const { toast } = useToast()
   const [isEnabled, setIsEnabled] = useState(true)
+
+  // Initialize form with default values
+  const form = useForm({
+    resolver: zodResolver(providerFormSchema),
+    defaultValues: {
+      apiKey: "",
+      baseUrl: "https://api.provider.com/v1",
+      environment: "production",
+      rateLimit: 1000,
+      ipWhitelist: ""
+    }
+  })
+
+  const onSubmit = async (data) => {
+    try {
+      // Handle form submission
+      console.log("Form data:", data)
+      toast({
+        title: "Settings saved",
+        description: "Provider configuration has been updated",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save provider configuration",
+        variant: "destructive",
+      })
+    }
+  }
 
   const handleStatusChange = (checked) => {
     setIsEnabled(checked)
@@ -179,53 +220,103 @@ export default function ProviderDetailPage({ params }) {
         {/* Configuration Tab */}
         <TabsContent value="configuration" className="space-y-6">
           <Card className="p-6">
-            <Form>
-              <div className="space-y-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
+                  control={form.control}
                   name="apiKey"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>API Key</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" />
+                        <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
                       <FormDescription>
                         Your provider API key for authentication
                       </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
+                  control={form.control}
                   name="baseUrl"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Base URL</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://api.provider.com/v1" />
+                        <Input placeholder="https://api.provider.com/v1" {...field} />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
+                  control={form.control}
                   name="environment"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Environment</FormLabel>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select environment" />
-                        </SelectTrigger>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select environment" />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
                           <SelectItem value="production">Production</SelectItem>
                           <SelectItem value="staging">Staging</SelectItem>
                           <SelectItem value="development">Development</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button>Save Changes</Button>
-              </div>
+
+                <FormField
+                  control={form.control}
+                  name="rateLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rate Limit</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="1000"
+                          {...field}
+                          onChange={e => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Maximum requests per minute
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ipWhitelist"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IP Whitelist</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Comma-separated IPs" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit">Save Changes</Button>
+              </form>
             </Form>
           </Card>
         </TabsContent>
@@ -261,35 +352,44 @@ export default function ProviderDetailPage({ params }) {
         {/* Security Tab */}
         <TabsContent value="security" className="space-y-6">
           <Card className="p-6">
-            <Form>
-              <div className="space-y-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
+                  control={form.control}
                   name="rateLimit"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Rate Limit</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="1000" />
+                        <Input 
+                          type="number" 
+                          placeholder="1000"
+                          {...field}
+                          onChange={e => field.onChange(Number(e.target.value))}
+                        />
                       </FormControl>
                       <FormDescription>
                         Maximum requests per minute
                       </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
+                  control={form.control}
                   name="ipWhitelist"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>IP Whitelist</FormLabel>
                       <FormControl>
-                        <Input placeholder="Comma-separated IPs" />
+                        <Input placeholder="Comma-separated IPs" {...field} />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button>Update Security Settings</Button>
-              </div>
+                <Button type="submit">Update Security Settings</Button>
+              </form>
             </Form>
           </Card>
         </TabsContent>
