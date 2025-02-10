@@ -16,11 +16,13 @@ import {
   Activity,
   AlertCircle,
   Settings,
-  Plus
+  Plus,
+  CheckCircle,
+  XCircle
 } from "lucide-react"
 
 // Sample data - replace with real API data
-const providers = [
+const PROVIDERS = [
   {
     id: 1,
     name: "OpenAI",
@@ -30,13 +32,54 @@ const providers = [
     models: 5,
     type: "Primary",
     isEnabled: true,
+    lastSync: "2 mins ago"
   },
-  // ... other providers
+  {
+    id: 2,
+    name: "Anthropic",
+    status: "degraded",
+    uptime: "98.5%",
+    responseTime: "200ms",
+    models: 3,
+    type: "Secondary",
+    isEnabled: true,
+    lastSync: "5 mins ago"
+  },
+  {
+    id: 3,
+    name: "Cohere",
+    status: "down",
+    uptime: "95.0%",
+    responseTime: "300ms",
+    models: 2,
+    type: "Secondary",
+    isEnabled: false,
+    lastSync: "10 mins ago"
+  }
 ]
+
+const STATUS_STYLES = {
+  operational: {
+    badge: "bg-green-500/10 text-green-500",
+    icon: CheckCircle,
+    text: "text-green-500"
+  },
+  degraded: {
+    badge: "bg-yellow-500/10 text-yellow-500",
+    icon: AlertCircle,
+    text: "text-yellow-500"
+  },
+  down: {
+    badge: "bg-red-500/10 text-red-500",
+    icon: XCircle,
+    text: "text-red-500"
+  }
+}
 
 function ProviderCard({ provider, onStatusChange }) {
   const router = useRouter()
   const { toast } = useToast()
+  const statusStyle = STATUS_STYLES[provider.status]
 
   const handleStatusToggle = async (checked) => {
     try {
@@ -55,18 +98,21 @@ function ProviderCard({ provider, onStatusChange }) {
   }
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow">
+    <Card className="p-6">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Server className="h-8 w-8 text-muted-foreground" />
+            <div className={`p-2 rounded-full ${statusStyle.badge}`}>
+              <Server className="h-6 w-6" />
+            </div>
             <div>
               <h3 className="font-semibold">{provider.name}</h3>
               <p className="text-sm text-muted-foreground">{provider.type}</p>
             </div>
           </div>
-          <Badge variant={provider.status === "operational" ? "success" : "destructive"}>
+          <Badge className={statusStyle.badge}>
+            <statusStyle.icon className="mr-1 h-4 w-4" />
             {provider.status}
           </Badge>
         </div>
@@ -86,6 +132,18 @@ function ProviderCard({ provider, onStatusChange }) {
               Uptime
             </div>
             <p className="font-medium">{provider.uptime}</p>
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div className="pt-4 border-t space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Active Models</span>
+            <span>{provider.models}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Last Sync</span>
+            <span>{provider.lastSync}</span>
           </div>
         </div>
 
@@ -121,7 +179,7 @@ export default function ProvidersPage() {
     console.log(`Provider ${id} status changed to ${status}`)
   }
 
-  const filteredProviders = providers.filter(provider => {
+  const filteredProviders = PROVIDERS.filter(provider => {
     if (filter.search && !provider.name.toLowerCase().includes(filter.search.toLowerCase())) {
       return false
     }
