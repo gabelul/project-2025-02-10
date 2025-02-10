@@ -3,138 +3,166 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Activity, Settings, MessageSquare, Database } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { auth } from "@/lib/auth"
-import { useToast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Avatar } from "@/components/ui/avatar"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Plus, Search, CreditCard, Activity, Users, DollarSign } from "lucide-react"
+
+// Sample data for charts
+const revenueData = [
+  { month: 'Jan', value: 12000 },
+  { month: 'Feb', value: 13500 },
+  { month: 'Mar', value: 14200 },
+  { month: 'Apr', value: 11800 },
+  { month: 'May', value: 15400 },
+  { month: 'Jun', value: 16200 },
+  { month: 'Jul', value: 15231.89 },
+]
+
+const exerciseData = [
+  { month: 'Jan', current: 65, previous: 45 },
+  { month: 'Feb', current: 75, previous: 55 },
+  { month: 'Mar', current: 85, previous: 65 },
+  { month: 'Apr', current: 95, previous: 75 },
+  { month: 'May', current: 85, previous: 85 },
+  { month: 'Jun', current: 75, previous: 65 },
+  { month: 'Jul', current: 65, previous: 55 },
+]
+
+const teamMembers = [
+  { name: 'Sofia Davis', email: 'sofia@example.com', role: 'Owner' },
+  { name: 'Jackson Lee', email: 'jackson@example.com', role: 'Member' },
+]
 
 export default function AdminDashboard() {
-  const router = useRouter()
-  const { toast } = useToast()
-
-  const handleLogout = () => {
-    auth.logout()
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    })
-    router.push('/login')
-  }
-
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <div className="flex items-center gap-4">
-          <Button variant="outline">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
-          <Button variant="ghost" onClick={handleLogout}>
-            Logout
-          </Button>
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div className="flex items-center space-x-2">
+          <Button>Download</Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card className="p-4">
-          <div className="flex items-center space-x-2">
-            <Activity className="h-8 w-8 text-blue-500" />
-            <div>
-              <h3 className="font-semibold">Active Tasks</h3>
-              <p className="text-2xl font-bold">24</p>
-            </div>
+      {/* Top Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">Total Revenue</div>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold">$15,231.89</div>
+          <div className="text-xs text-muted-foreground">
+            +20.1% from last month
           </div>
         </Card>
-        <Card className="p-4">
-          <div className="flex items-center space-x-2">
-            <MessageSquare className="h-8 w-8 text-green-500" />
-            <div>
-              <h3 className="font-semibold">Content Generated</h3>
-              <p className="text-2xl font-bold">1,234</p>
-            </div>
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">Subscriptions</div>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold">+2350</div>
+          <div className="text-xs text-muted-foreground">
+            +180.1% from last month
           </div>
         </Card>
-        <Card className="p-4">
-          <div className="flex items-center space-x-2">
-            <Database className="h-8 w-8 text-purple-500" />
-            <div>
-              <h3 className="font-semibold">Active Providers</h3>
-              <p className="text-2xl font-bold">3</p>
-            </div>
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">Active Users</div>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold">1,234</div>
+          <div className="text-xs text-muted-foreground">
+            +19% from last month
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">Active Providers</div>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold">12</div>
+          <div className="text-xs text-muted-foreground">
+            +2 from last month
           </div>
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="providers">Providers</TabsTrigger>
-          <TabsTrigger value="prompts">Prompts</TabsTrigger>
-          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-              <div className="space-y-2">
-                <Link href="/admin/providers">
-                  <Button className="w-full justify-start" variant="outline">
-                    Configure Providers
-                  </Button>
-                </Link>
-                <Link href="/admin/prompts">
-                  <Button className="w-full justify-start" variant="outline">
-                    Manage Prompts
-                  </Button>
-                </Link>
-                <Link href="/admin/monitoring">
-                  <Button className="w-full justify-start" variant="outline">
-                    View Performance
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">System Status</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span>API Status</span>
-                  <span className="text-green-500">Operational</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Queue Status</span>
-                  <span className="text-green-500">Normal</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Database Status</span>
-                  <span className="text-green-500">Connected</span>
-                </div>
-              </div>
-            </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        {/* Team Members */}
+        <Card className="col-span-3 p-6">
+          <div className="flex items-center justify-between pb-4">
+            <div>
+              <h3 className="text-lg font-medium">Team Members</h3>
+              <p className="text-sm text-muted-foreground">
+                Invite your team members to collaborate.
+              </p>
+            </div>
+            <Button size="sm" className="shrink-0">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Member
+            </Button>
           </div>
-        </TabsContent>
+          <div className="space-y-4">
+            {teamMembers.map((member) => (
+              <div
+                key={member.email}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-8 w-8">
+                    <div className="font-medium">
+                      {member.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{member.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {member.email}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="secondary">{member.role}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
 
-        <TabsContent value="providers" className="space-y-4">
-          <Card className="p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Active Providers</h3>
-              <Link href="/admin/providers">
-                <Button>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Manage Providers
-                </Button>
-              </Link>
+        {/* Charts */}
+        <Card className="col-span-4 p-6">
+          <div className="flex items-center justify-between pb-4">
+            <div>
+              <h3 className="text-lg font-medium">Exercise Minutes</h3>
+              <p className="text-sm text-muted-foreground">
+                Your exercise minutes are ahead of where you normally are.
+              </p>
             </div>
-            <div className="space-y-2">
-              {/* Provider summary content */}
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </div>
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={exerciseData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="current" 
+                  stroke="#8884d8" 
+                  name="Current"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="previous" 
+                  stroke="#82ca9d" 
+                  name="Previous"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
