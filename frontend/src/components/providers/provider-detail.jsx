@@ -4,11 +4,22 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { Eye, EyeOff, Activity, Shield, Settings, Globe, Gauge } from "lucide-react"
+import { 
+  Eye, EyeOff, Activity, Shield, Settings, Globe, 
+  Gauge, BarChart, AlertTriangle, Cpu 
+} from "lucide-react"
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer 
+} from "recharts"
 import { providerFormSchema } from "@/lib/validation/provider-schema"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import {
+  Card, CardContent, CardHeader, CardTitle, CardDescription
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -26,9 +37,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
+import { useRealTime } from "@/hooks/use-real-time"
 
 export function ProviderDetail({ id }) {
   const router = useRouter()
@@ -36,6 +47,14 @@ export function ProviderDetail({ id }) {
   const [isLoading, setIsLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
+
+  // Mock performance data - replace with real-time data
+  const performanceData = useRealTime(`/api/providers/${id}/metrics`, {
+    responseTime: [],
+    errorRates: [],
+    costAnalysis: [],
+    usage: []
+  })
 
   useEffect(() => {
     setMounted(true)
@@ -93,41 +112,49 @@ export function ProviderDetail({ id }) {
 
   if (!mounted) return null
 
-  // Mock stats data - replace with real data
-  const stats = {
-    requestsToday: 1234,
-    averageLatency: "120ms",
-    successRate: "99.9%",
-    lastError: "2 hours ago"
-  }
-
   return (
     <div className="space-y-6">
-      {/* Stats Overview Cards */}
+      {/* Quick Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Requests Today</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.requestsToday}</div>
-          </CardContent>
-        </Card>
-        {/* ... similar cards for other stats ... */}
+        <StatsCard
+          title="Total Requests"
+          value="23.4k"
+          change="+12%"
+          icon={<Activity />}
+        />
+        <StatsCard
+          title="Avg Response"
+          value="124ms"
+          change="-8%"
+          icon={<Gauge />}
+        />
+        <StatsCard
+          title="Error Rate"
+          value="0.12%"
+          change="+0.04%"
+          icon={<AlertTriangle />}
+          changeType="negative"
+        />
+        <StatsCard
+          title="Active Models"
+          value="8/12"
+          change="+2"
+          icon={<Cpu />}
+        />
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="configuration">Configuration</TabsTrigger>
+          <TabsTrigger value="api">API Settings</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+          <TabsTrigger value="models">Models</TabsTrigger>
         </TabsList>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Overview Tab */}
             <TabsContent value="overview">
               <Card>
                 <CardHeader>
@@ -164,7 +191,8 @@ export function ProviderDetail({ id }) {
               </Card>
             </TabsContent>
 
-            <TabsContent value="configuration">
+            {/* API Settings Tab */}
+            <TabsContent value="api">
               <Card>
                 <CardHeader>
                   <CardTitle>API Configuration</CardTitle>
@@ -196,11 +224,11 @@ export function ProviderDetail({ id }) {
                       </FormItem>
                     )}
                   />
-                  {/* ... other API config fields ... */}
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Security Tab */}
             <TabsContent value="security">
               <Card>
                 <CardHeader>
@@ -227,34 +255,41 @@ export function ProviderDetail({ id }) {
                       </FormItem>
                     )}
                   />
-                  {/* ... other security fields ... */}
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Performance Tab */}
             <TabsContent value="performance">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Performance settings fields */}
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-4 gap-4">
+                <PerformanceChart 
+                  data={performanceData.responseTime} 
+                  title="Response Time" 
+                  dataKey="time" 
+                  color="#8884d8" 
+                />
+                <PerformanceChart 
+                  data={performanceData.errorRates} 
+                  title="Error Rates" 
+                  dataKey="rate" 
+                  color="#82ca9d" 
+                />
+              </div>
             </TabsContent>
 
-            <TabsContent value="monitoring">
+            {/* Models Tab */}
+            <TabsContent value="models">
               <Card>
                 <CardHeader>
-                  <CardTitle>Monitoring Configuration</CardTitle>
+                  <CardTitle>Configured Models</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Monitoring settings and metrics */}
+                  {/* Models configuration */}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end mt-6">
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Saving..." : "Save Changes"}
               </Button>
@@ -263,5 +298,52 @@ export function ProviderDetail({ id }) {
         </Form>
       </Tabs>
     </div>
+  )
+}
+
+// Component for Performance Charts
+function PerformanceChart({ data, title, dataKey, color }) {
+  return (
+    <Card className="col-span-2">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" />
+            <YAxis />
+            <Tooltip />
+            <Line 
+              type="monotone" 
+              dataKey={dataKey} 
+              stroke={color} 
+              strokeWidth={2} 
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Stats Card Component
+function StatsCard({ title, value, change, icon, changeType = "positive" }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className={`text-xs ${
+          changeType === "positive" ? "text-green-500" : "text-red-500"
+        }`}>
+          {change}
+        </p>
+      </CardContent>
+    </Card>
   )
 }
