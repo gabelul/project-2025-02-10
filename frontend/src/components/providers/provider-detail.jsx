@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { providerFormSchema } from "@/lib/validation/provider-schema"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 import { ConfigurationTab } from "./tabs/configuration-tab"
 import { PerformanceTab } from "./tabs/performance-tab"
 import { ModelsTab } from "./tabs/models-tab"
@@ -14,9 +15,33 @@ import { ModelsTab } from "./tabs/models-tab"
 export function ProviderDetail({ id }) {
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [provider, setProvider] = useState(null)
   const router = useRouter()
+  const { toast } = useToast()
+
+  const form = useForm({
+    resolver: zodResolver(providerFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      apiKey: "",
+      baseUrl: "https://api.provider.com/v1",
+      environment: "development",
+      timeout: 30000,
+      retryAttempts: 3,
+      rateLimit: {
+        enabled: true,
+        requestsPerMinute: 1000,
+        burstLimit: 10
+      },
+      security: {
+        enableIPWhitelist: false,
+        ipWhitelist: "",
+        enableRequestLogging: true,
+        enableRateLimiting: true
+      },
+      models: []
+    }
+  })
 
   useEffect(() => {
     async function loadProvider() {
@@ -24,9 +49,13 @@ export function ProviderDetail({ id }) {
         const response = await fetch(`/api/providers/${id}`)
         if (!response.ok) throw new Error('Failed to load provider')
         const data = await response.json()
-        setProvider(data)
-      } catch (err) {
-        setError(err.message)
+        form.reset(data)
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load provider details",
+          variant: "destructive",
+        })
       } finally {
         setIsLoading(false)
         setMounted(true)
@@ -34,51 +63,63 @@ export function ProviderDetail({ id }) {
     }
 
     loadProvider()
-  }, [id])
+  }, [id, form, toast])
+
+  async function onSubmit(data) {
+    try {
+      const response = await fetch(`/api/providers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      if (!response.ok) throw new Error('Failed to update provider')
+
+      toast({
+        title: "Success",
+        description: "Provider updated successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update provider",
+        variant: "destructive",
+      })
+    }
+  }
 
   if (!mounted) return null
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <AdminBreadcrumb segments={["Providers", "Error"]} />
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
-
-  const breadcrumbSegments = [
-    { label: "Providers", href: "/admin/providers" },
-    provider?.name || `Provider ${id}`
-  ]
-
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb segments={breadcrumbSegments} />
-      
-      <Tabs defaultValue="config" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="config">Configuration</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="models">Models</TabsTrigger>
-        </TabsList>
+      <AdminBreadcrumb 
+        segments={[
+          { label: "Providers", href: "/admin/providers" },
+          form.getValues("name") || `Provider ${id}`
+        ]} 
+      />
 
-        <TabsContent value="config">
-          <ConfigurationTab provider={provider} />
-        </TabsContent>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <Tabs defaultValue="config" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="config">Configuration</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="models">Models</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="performance">
-          <PerformanceTab providerId={id} />
-        </TabsContent>
+          <TabsContent value="config">
+            <ConfigurationTab form={form} isLoading={isLoading} />
+          </TabsContent>
 
-        <TabsContent value="models">
-          <ModelsTab providerId={id} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="performance">
+            <PerformanceTab providerId={id} />
+          </TabsContent>
+
+          <TabsContent value="models">
+            <ModelsTab providerId={id} form={form} />
+          </TabsContent>
+        </Tabs>
+      </form>
     </div>
   )
 }
