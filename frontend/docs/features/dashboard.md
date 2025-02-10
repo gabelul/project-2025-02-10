@@ -3,7 +3,7 @@
 ## Overview
 The main interface for system management, providing quick access to all features and key metrics.
 
-## Layout
+## Layout Flow
 - Top navigation bar
 - Quick action cards
 - System status indicators

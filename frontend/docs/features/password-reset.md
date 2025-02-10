@@ -3,7 +3,7 @@
 ## Overview
 Secure password reset flow with email verification.
 
-## Flow
+## Reset Flow
 1. User requests reset
 2. Email verification
 3. New password setup
