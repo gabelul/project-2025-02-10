@@ -34,12 +34,18 @@ class ErrorLogger {
     this.logs = []
     this.maxLogs = 1000
     this.subscribers = new Set()
+    this.logCounter = 0
+  }
+
+  generateId() {
+    this.logCounter += 1
+    return `error_${Date.now()}_${this.logCounter}`
   }
 
   log(level, message, error = null, context = {}) {
     const timestamp = new Date()
     const logEntry = {
-      id: uuidv4(),
+      id: this.generateId(),
       timestamp,
       level,
       message,
