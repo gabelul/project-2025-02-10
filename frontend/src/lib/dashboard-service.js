@@ -10,25 +10,83 @@ export function getWebSocketUrl() {
   return WS_URL
 }
 
+import { z } from "zod"
+
+// Validation schemas for incoming data
+const statsSchema = z.object({
+  totalRequests: z.number(),
+  activeModels: z.number(),
+  monthlyCost: z.number(),
+  systemHealth: z.number()
+})
+
+const performanceSchema = z.array(z.object({
+  name: z.string(),
+  value: z.number()
+}))
+
+const providerSchema = z.object({
+  name: z.string(),
+  status: z.enum(['operational', 'degraded', 'down']),
+  latency: z.string(),
+  models: z.number()
+})
+
+/**
+ * Validates and transforms incoming WebSocket messages
+ * @param {Object} message - Raw WebSocket message
+ * @returns {Object|null} Transformed data or null if invalid
+ */
 export function transformDashboardData(message) {
-  switch (message.topic) {
-    case DashboardTopics.STATS:
-      return {
-        type: 'stats',
-        data: message.data
-      }
-    case DashboardTopics.PERFORMANCE:
-      return {
-        type: 'performance',
-        data: message.data
-      }
-    case DashboardTopics.PROVIDERS:
-      return {
-        type: 'providers',
-        data: message.data
-      }
-    default:
-      return null
+  try {
+    switch (message.topic) {
+      case DashboardTopics.STATS:
+        return {
+          type: 'stats',
+          data: statsSchema.parse(message.data)
+        }
+      case DashboardTopics.PERFORMANCE:
+        return {
+          type: 'performance',
+          data: performanceSchema.parse(message.data)
+        }
+      case DashboardTopics.PROVIDERS:
+        return {
+          type: 'providers',
+          data: z.array(providerSchema).parse(message.data)
+        }
+      default:
+        console.warn('Unknown message topic:', message.topic)
+        return null
+    }
+  } catch (error) {
+    console.error('Data validation error:', error)
+    throw new Error(`Invalid data received for ${message.topic}`)
+  }
+}
+
+/**
+ * Error types for dashboard operations
+ */
+export const DashboardErrors = {
+  CONNECTION: 'connection_error',
+  VALIDATION: 'validation_error',
+  TIMEOUT: 'timeout_error',
+  UNKNOWN: 'unknown_error'
+}
+
+/**
+ * Creates an error object with additional context
+ * @param {string} type - Error type from DashboardErrors
+ * @param {string} message - Error message
+ * @param {*} details - Additional error details
+ */
+export function createDashboardError(type, message, details = null) {
+  return {
+    type,
+    message,
+    details,
+    timestamp: new Date().toISOString()
   }
 }
 
