@@ -4,287 +4,83 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { 
-  Eye, EyeOff, Settings2, Shield, Activity, 
-  Gauge, Database, AlertTriangle 
-} from "lucide-react"
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer 
-} from "recharts"
 import { providerFormSchema } from "@/lib/validation/provider-schema"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { useRealTime } from "@/hooks/use-real-time"
-
-function StatsCard({ title, value, change, icon, type }) {
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center justify-between">
-        <div>
-          <div className="text-sm text-muted-foreground">{title}</div>
-          <div className="text-2xl font-bold">{value}</div>
-          <Badge 
-            variant={type === 'positive' ? 'default' : 'destructive'}
-            className="mt-1"
-          >
-            {change}
-          </Badge>
-        </div>
-        {icon}
-      </CardContent>
-    </Card>
-  )
-}
-
-function ConfigurationTab({ form, showApiKey, setShowApiKey }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Provider Configuration</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Provider Name</FormLabel>
-              <FormControl>
-                <Input placeholder="My Provider" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="apiKey"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>API Key</FormLabel>
-              <div className="flex space-x-2">
-                <FormControl>
-                  <Input
-                    type={showApiKey ? "text" : "password"}
-                    {...field}
-                  />
-                </FormControl>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                >
-                  {showApiKey ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="baseUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Base URL</FormLabel>
-              <FormControl>
-                <Input placeholder="https://api.example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="environment"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Environment</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select environment" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="development">Development</SelectItem>
-                  <SelectItem value="staging">Staging</SelectItem>
-                  <SelectItem value="production">Production</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </CardContent>
-    </Card>
-  )
-}
-
-function PerformanceTab({ metrics }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Performance Metrics</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={metrics.responseTime}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="value" stroke="#8884d8" />
-          </LineChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  )
-}
-
-function ModelsTab({ form }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Provider Models</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Placeholder for models configuration */}
-        <div>Models configuration will be added in future updates</div>
-      </CardContent>
-    </Card>
-  )
-}
+import { ConfigurationTab } from "./tabs/configuration-tab"
+import { PerformanceTab } from "./tabs/performance-tab"
+import { ModelsTab } from "./tabs/models-tab"
 
 export function ProviderDetail({ id }) {
   const [mounted, setMounted] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [showApiKey, setShowApiKey] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
   const router = useRouter()
   const { toast } = useToast()
 
-  // Real-time metrics data
-  const metrics = useRealTime(`/api/providers/${id}/metrics`, {
-    responseTime: [],
-    usage: [],
-    errors: [],
-    costs: []
-  })
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
+  // Form setup with initial empty values
   const form = useForm({
     resolver: zodResolver(providerFormSchema),
     defaultValues: {
       name: "",
       description: "",
       apiKey: "",
-      baseUrl: "https://api.provider.com/v1",
+      baseUrl: "",
       environment: "development",
-      timeout: 30000,
-      retryAttempts: 3,
-      rateLimit: {
-        enabled: true,
-        requestsPerMinute: 1000,
-        burstLimit: 10
-      },
-      security: {
-        enableIPWhitelist: false,
-        ipWhitelist: "",
-        enableRequestLogging: true,
-        enableRateLimiting: true
-      },
-      models: []
+      // ... other default values
     }
   })
 
+  // Load provider data
+  useEffect(() => {
+    async function loadProvider() {
+      try {
+        // Mock API call - replace with real API
+        const response = await fetch(`/api/providers/${id}`)
+        const data = await response.json()
+        
+        if (response.ok) {
+          // Reset form with provider data
+          form.reset(data)
+        } else {
+          setError(data.message || "Failed to load provider")
+          toast({
+            title: "Error",
+            description: "Failed to load provider details",
+            variant: "destructive",
+          })
+        }
+      } catch (err) {
+        setError(err.message)
+        toast({
+          title: "Error",
+          description: "An error occurred while loading provider details",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+        setMounted(true)
+      }
+    }
+
+    loadProvider()
+  }, [id, form, toast])
+
+  // Don't render until mounted to prevent hydration issues
   if (!mounted) return null
 
-  async function onSubmit(data) {
-    setIsLoading(true)
-    try {
-      // API call here
-      toast({
-        title: "Success",
-        description: "Provider settings updated successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update provider settings",
-        variant: "destructive",
-      })
-    }
-    setIsLoading(false)
+  // Show error state
+  if (error) {
+    return (
+      <div className="rounded-lg border border-destructive p-4">
+        <h2 className="text-lg font-semibold text-destructive mb-2">Error Loading Provider</h2>
+        <p className="text-muted-foreground">{error}</p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatsCard
-          title="Response Time"
-          value="124ms"
-          change="-8%"
-          icon={<Gauge className="h-4 w-4" />}
-          type="positive"
-        />
-        <StatsCard
-          title="Requests/min"
-          value="1,234"
-          change="+12%"
-          icon={<Activity className="h-4 w-4" />}
-          type="positive"
-        />
-        <StatsCard
-          title="Error Rate"
-          value="0.12%"
-          change="+0.02%"
-          icon={<AlertTriangle className="h-4 w-4" />}
-          type="negative"
-        />
-        <StatsCard
-          title="Active Models"
-          value="8/12"
-          change="+2"
-          icon={<Database className="h-4 w-4" />}
-          type="positive"
-        />
-      </div>
-
       <Tabs defaultValue="config" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="config">Configuration</TabsTrigger>
@@ -292,31 +88,17 @@ export function ProviderDetail({ id }) {
           <TabsTrigger value="models">Models</TabsTrigger>
         </TabsList>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <TabsContent value="config">
-              <ConfigurationTab 
-                form={form} 
-                showApiKey={showApiKey}
-                setShowApiKey={setShowApiKey}
-              />
-            </TabsContent>
+        <TabsContent value="config">
+          <ConfigurationTab form={form} />
+        </TabsContent>
 
-            <TabsContent value="performance">
-              <PerformanceTab metrics={metrics} />
-            </TabsContent>
+        <TabsContent value="performance">
+          <PerformanceTab providerId={id} />
+        </TabsContent>
 
-            <TabsContent value="models">
-              <ModelsTab form={form} />
-            </TabsContent>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <TabsContent value="models">
+          <ModelsTab providerId={id} form={form} />
+        </TabsContent>
       </Tabs>
     </div>
   )
