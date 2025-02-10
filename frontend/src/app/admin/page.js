@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from 'react'
+import { useWebSocket } from '@/hooks/use-websocket'
+import { getWebSocketUrl, transformDashboardData, fetchDashboardData } from '@/lib/dashboard-service'
 import { useRealTime } from "@/hooks/use-real-time"
-import { fetchDashboardData } from "@/lib/dashboard-service"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,9 +20,6 @@ import {
   ArrowUp,
   Boxes,
   CircleDollarSign,
-  Cpu,
-  Database,
-  Server,
   Shield,
   Clock,
   RefreshCcw
@@ -65,31 +63,71 @@ function MetricCard({ title, value, icon: Icon, trend, loading }) {
 }
 
 export default function AdminDashboard() {
+  const [dashboardData, setDashboardData] = useState({
+    stats: null,
+    performance: null,
+    providers: null
+  })
+
+  const handleWebSocketMessage = useCallback((message) => {
+    const transformed = transformDashboardData(message)
+    if (transformed) {
+      setDashboardData(prev => ({
+        ...prev,
+        [transformed.type]: transformed.data
+      }))
+    }
+  }, [])
+
   const {
-    data,
-    loading,
-    error,
+    isConnected,
+    connectionStatus
+  } = useWebSocket(getWebSocketUrl(), {
+    onMessage: handleWebSocketMessage
+  })
+
+  // Fallback polling when WebSocket fails
+  const {
+    data: polledData,
+    loading: pollingLoading,
+    error: pollingError,
     lastUpdated,
     refresh
-  } = useRealTime(fetchDashboardData, 10000) // 10 second updates
+  } = useRealTime(fetchDashboardData, 10000, !isConnected)
+
+  // Use WebSocket data or fallback to polling data
+  const data = isConnected ? dashboardData : polledData
+  const loading = connectionStatus === 'connecting' || pollingLoading
+  const error = pollingError
 
   return (
     <div className="flex-1 space-y-6 p-8">
-      {/* Header with refresh */}
+      {/* Header with connection status */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          {lastUpdated && (
-            <p className="text-sm text-muted-foreground">
-              Last updated: {format(lastUpdated, 'HH:mm:ss')}
-            </p>
-          )}
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant={
+              isConnected ? "success" : 
+              connectionStatus === 'reconnecting' ? "warning" : 
+              "destructive"
+            }>
+              {connectionStatus === 'connected' ? 'Live Updates' :
+               connectionStatus === 'reconnecting' ? 'Reconnecting' :
+               'Polling Updates'}
+            </Badge>
+            {lastUpdated && !isConnected && (
+              <span className="text-sm text-muted-foreground">
+                Last updated: {format(lastUpdated, 'HH:mm:ss')}
+              </span>
+            )}
+          </div>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={refresh}
-          disabled={loading}
+          disabled={loading || isConnected}
         >
           <RefreshCcw className={cn(
             "mr-2 h-4 w-4",
