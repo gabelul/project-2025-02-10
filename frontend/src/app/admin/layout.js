@@ -10,9 +10,9 @@ export default function AdminLayout({ children }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex min-h-screen">
             <MainSidebar />
-            <div className="flex-1 flex flex-col">
+            <main className="flex-1 flex flex-col">
               {children}
-            </div>
+            </main>
           </div>
         </ThemeProvider>
       </body>
