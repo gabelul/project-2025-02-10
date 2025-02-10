@@ -5,16 +5,36 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Activity, Settings, MessageSquare, Database } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { auth } from "@/lib/auth"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function AdminDashboard() {
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const handleLogout = () => {
+    auth.logout()
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    })
+    router.push('/login')
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline">
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button variant="outline">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Button>
+          <Button variant="ghost" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
