@@ -6,8 +6,9 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Shield, User } from "lucide-react"
+import { Loader2, Shield, User, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 const TEST_ACCOUNTS = [
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -28,6 +30,7 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("") // Clear any previous errors
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -51,6 +54,7 @@ export default function LoginPage() {
       
       router.push('/admin')
     } catch (error) {
+      setError(error.message)
       toast({
         title: "Login failed",
         description: error.message,
@@ -66,6 +70,7 @@ export default function LoginPage() {
       email: account.email,
       password: account.password
     })
+    setError("") // Clear any errors when selecting a test account
     toast({
       title: "Test Account Selected",
       description: `${account.role} account credentials filled`,
@@ -82,6 +87,13 @@ export default function LoginPage() {
             <p className="text-gray-500 mt-2">Sign in to access the dashboard</p>
           </div>
 
+          {error && (
+            <Alert variant="destructive" className="animate-shake">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -89,11 +101,15 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  email: e.target.value
-                }))}
+                onChange={(e) => {
+                  setError("") // Clear error on input change
+                  setFormData(prev => ({
+                    ...prev,
+                    email: e.target.value
+                  }))
+                }}
                 required
+                className={error ? "border-red-500" : ""}
               />
             </div>
 
@@ -103,11 +119,15 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 value={formData.password}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  password: e.target.value
-                }))}
+                onChange={(e) => {
+                  setError("") // Clear error on input change
+                  setFormData(prev => ({
+                    ...prev,
+                    password: e.target.value
+                  }))
+                }}
                 required
+                className={error ? "border-red-500" : ""}
               />
             </div>
 
