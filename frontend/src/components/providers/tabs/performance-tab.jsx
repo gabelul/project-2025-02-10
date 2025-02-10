@@ -8,19 +8,72 @@ import {
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { 
   Clock, TrendingUp, AlertTriangle, DollarSign,
   ArrowUp, ArrowDown 
 } from "lucide-react"
 
-export function PerformanceTab({ metrics }) {
-  const [mounted, setMounted] = useState(false)
+// Mock data for initial render
+const mockData = {
+  responseTime: Array.from({ length: 24 }, (_, i) => ({
+    time: `${i}:00`,
+    value: Math.floor(Math.random() * 100) + 100
+  })),
+  usage: Array.from({ length: 12 }, (_, i) => ({
+    time: `${i}:00`,
+    requests: Math.floor(Math.random() * 1000)
+  })),
+  errors: Array.from({ length: 24 }, (_, i) => ({
+    time: `${i}:00`,
+    rate: (Math.random() * 0.5).toFixed(2)
+  })),
+  costs: Array.from({ length: 7 }, (_, i) => ({
+    time: `Day ${i + 1}`,
+    value: Math.floor(Math.random() * 100)
+  }))
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-[200px]" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function PerformanceTab({ providerId }) {
+  const [metrics, setMetrics] = useState(mockData)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    async function fetchMetrics() {
+      try {
+        const response = await fetch(`/api/providers/${providerId}/metrics`)
+        if (!response.ok) throw new Error('Failed to load metrics')
+        const data = await response.json()
+        setMetrics(data)
+      } catch (err) {
+        setError(err.message)
+        // Fallback to mock data in case of error
+        setMetrics(mockData)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  if (!mounted) return null
+    fetchMetrics()
+  }, [providerId])
+
+  if (isLoading) return <LoadingSkeleton />
 
   return (
     <div className="space-y-6">
@@ -53,14 +106,8 @@ export function PerformanceTab({ metrics }) {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={metrics.responseTime}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="time" 
-                  className="text-xs" 
-                />
-                <YAxis 
-                  className="text-xs"
-                  tickFormatter={(value) => `${value}ms`}
-                />
+                <XAxis dataKey="time" />
+                <YAxis />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: "hsl(var(--background))",
@@ -106,8 +153,8 @@ export function PerformanceTab({ metrics }) {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={metrics.usage}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="time" className="text-xs" />
-                  <YAxis className="text-xs" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: "hsl(var(--background))",
@@ -149,11 +196,8 @@ export function PerformanceTab({ metrics }) {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={metrics.errors}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="time" className="text-xs" />
-                  <YAxis 
-                    className="text-xs"
-                    tickFormatter={(value) => `${value}%`}
-                  />
+                  <XAxis dataKey="time" />
+                  <YAxis />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: "hsl(var(--background))",
@@ -173,60 +217,6 @@ export function PerformanceTab({ metrics }) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Cost Analysis */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Cost Analysis
-              </CardTitle>
-              <CardDescription>
-                API usage costs over time
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">
-                Total: $1,234.56
-              </Badge>
-              <Badge variant="destructive" className="flex items-center gap-1">
-                <ArrowUp className="h-3 w-3" />
-                15%
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={metrics.costs}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="time" className="text-xs" />
-                <YAxis 
-                  className="text-xs"
-                  tickFormatter={(value) => `$${value}`}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))"
-                  }}
-                  formatter={(value) => [`$${value}`, "Cost"]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="hsl(var(--primary))"
-                  fill="hsl(var(--primary))"
-                  fillOpacity={0.2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
