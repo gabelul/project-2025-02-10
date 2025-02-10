@@ -3,15 +3,6 @@
 ## Overview
 A secure, role-based authentication system with session management and protected routes.
 
-## Features
-- Role-based access control (Admin, Editor, Viewer)
-- Secure session management
-- Protected routes
-- Auto-fill test accounts
+## Authentication Flow Diagrams
 
-## Components
-### Login Form
-- Clean, centered card layout
-- Input validation
-- Loading states
-- Toast notifications
+### Login Flow
