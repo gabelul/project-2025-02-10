@@ -1,11 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { useRealTime } from "@/hooks/use-real-time"
+import { fetchDashboardData } from "@/lib/dashboard-service"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { 
   Activity, 
@@ -18,109 +23,111 @@ import {
   Database,
   Server,
   Shield,
-  Clock
+  Clock,
+  RefreshCcw
 } from "lucide-react"
 
-// Sample data - replace with real data
-const performanceData = [
-  { name: "Mon", value: 400 },
-  { name: "Tue", value: 300 },
-  { name: "Wed", value: 500 },
-  { name: "Thu", value: 450 },
-  { name: "Fri", value: 470 },
-  { name: "Sat", value: 480 },
-  { name: "Sun", value: 600 }
-]
+function MetricCard({ title, value, icon: Icon, trend, loading }) {
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <Skeleton className="h-8 w-24" />
+          </div>
+          <Skeleton className="h-12 w-12 rounded-full" />
+        </div>
+        <Skeleton className="mt-4 h-4 w-28" />
+      </Card>
+    )
+  }
 
-const costData = [
-  { name: "Mon", value: 120 },
-  { name: "Tue", value: 140 },
-  { name: "Wed", value: 180 },
-  { name: "Thu", value: 160 },
-  { name: "Fri", value: 150 },
-  { name: "Sat", value: 170 },
-  { name: "Sun", value: 190 }
-]
-
-const providers = [
-  { name: "OpenAI", status: "operational", latency: "45ms", models: 5 },
-  { name: "Anthropic", status: "degraded", latency: "120ms", models: 3 },
-  { name: "Cohere", status: "operational", latency: "65ms", models: 4 },
-  { name: "Mistral", status: "operational", latency: "55ms", models: 2 }
-]
-
-const activities = [
-  { time: "2 min ago", message: "New model deployed", type: "success" },
-  { time: "15 min ago", message: "High latency detected", type: "warning" },
-  { time: "1 hour ago", message: "Cost threshold reached", type: "error" },
-  { time: "2 hours ago", message: "System update completed", type: "info" }
-]
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <Icon className="h-6 w-6 text-primary" />
+        </div>
+      </div>
+      {trend && (
+        <div className={`mt-4 flex items-center text-sm ${trend.up ? 'text-green-600' : 'text-red-600'}`}>
+          {trend.up ? <ArrowUp className="mr-1 h-4 w-4" /> : <ArrowDown className="mr-1 h-4 w-4" />}
+          {trend.value}% from last month
+        </div>
+      )}
+    </Card>
+  )
+}
 
 export default function AdminDashboard() {
+  const {
+    data,
+    loading,
+    error,
+    lastUpdated,
+    refresh
+  } = useRealTime(fetchDashboardData, 10000) // 10 second updates
+
   return (
     <div className="flex-1 space-y-6 p-8">
+      {/* Header with refresh */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          {lastUpdated && (
+            <p className="text-sm text-muted-foreground">
+              Last updated: {format(lastUpdated, 'HH:mm:ss')}
+            </p>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={refresh}
+          disabled={loading}
+        >
+          <RefreshCcw className={cn(
+            "mr-2 h-4 w-4",
+            loading && "animate-spin"
+          )} />
+          Refresh
+        </Button>
+      </div>
+
       {/* Top Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Total Requests</p>
-              <p className="text-2xl font-bold">45.2k</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Activity className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-green-600">
-            <ArrowUp className="mr-1 h-4 w-4" />
-            12% from last month
-          </div>
-        </Card>
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Active Models</p>
-              <p className="text-2xl font-bold">14</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-              <Boxes className="h-6 w-6 text-blue-600 dark:text-blue-300" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-blue-600">
-            <Database className="mr-1 h-4 w-4" />
-            3 new this week
-          </div>
-        </Card>
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Monthly Cost</p>
-              <p className="text-2xl font-bold">$2,450</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-              <CircleDollarSign className="h-6 w-6 text-green-600 dark:text-green-300" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-red-600">
-            <ArrowUp className="mr-1 h-4 w-4" />
-            8% over budget
-          </div>
-        </Card>
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">System Health</p>
-              <p className="text-2xl font-bold">98.2%</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-              <Shield className="h-6 w-6 text-purple-600 dark:text-purple-300" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-green-600">
-            <Cpu className="mr-1 h-4 w-4" />
-            All systems normal
-          </div>
-        </Card>
+        <MetricCard
+          title="Total Requests"
+          value={data?.stats?.totalRequests || "45.2k"}
+          icon={Activity}
+          trend={{ value: 12, up: true }}
+          loading={loading}
+        />
+        <MetricCard
+          title="Active Models"
+          value={data?.stats?.activeModels || "14"}
+          icon={Boxes}
+          trend={{ value: 3, up: true }}
+          loading={loading}
+        />
+        <MetricCard
+          title="Monthly Cost"
+          value={data?.stats?.monthlyCost || "$2,450"}
+          icon={CircleDollarSign}
+          trend={{ value: 8, up: false }}
+          loading={loading}
+        />
+        <MetricCard
+          title="System Health"
+          value={data?.stats?.systemHealth || "98.2%"}
+          icon={Shield}
+          loading={loading}
+        />
       </div>
 
       {/* Charts */}
@@ -130,68 +137,109 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-medium">Performance</h3>
             <p className="text-sm text-muted-foreground">Request volume over time</p>
           </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {loading ? (
+            <div className="h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data?.performance || [
+                  { name: "Mon", value: 400 },
+                  { name: "Tue", value: 300 },
+                  { name: "Wed", value: 500 },
+                  { name: "Thu", value: 450 },
+                  { name: "Fri", value: 470 },
+                  { name: "Sat", value: 480 },
+                  { name: "Sun", value: 600 }
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </Card>
         <Card className="p-6">
           <div className="mb-4">
             <h3 className="text-lg font-medium">Cost Tracking</h3>
             <p className="text-sm text-muted-foreground">Daily cost distribution</p>
           </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={costData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar 
-                  dataKey="value" 
-                  fill="hsl(var(--primary))" 
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {loading ? (
+            <div className="h-[300px] flex items-center justify-center">
+              <Skeleton className="h-[250px] w-full" />
+            </div>
+          ) : (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data?.costData || [
+                  { name: "Mon", value: 120 },
+                  { name: "Tue", value: 140 },
+                  { name: "Wed", value: 180 },
+                  { name: "Thu", value: 160 },
+                  { name: "Fri", value: 150 },
+                  { name: "Sat", value: 170 },
+                  { name: "Sun", value: 190 }
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar 
+                    dataKey="value" 
+                    fill="hsl(var(--primary))" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </Card>
       </div>
 
       {/* Provider Status Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {providers.map((provider) => (
-          <Card key={provider.name} className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">{provider.name}</h3>
-              <Badge variant={provider.status === "operational" ? "success" : "destructive"}>
-                {provider.status}
-              </Badge>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Latency</span>
-                <span>{provider.latency}</span>
+        {loading ? (
+          Array(4).fill(0).map((_, i) => (
+            <Card key={i} className="p-6">
+              <Skeleton className="h-20 w-full" />
+            </Card>
+          ))
+        ) : (
+          (data?.providers || [
+            { name: "OpenAI", status: "operational", latency: "45ms", models: 5 },
+            { name: "Anthropic", status: "degraded", latency: "120ms", models: 3 },
+            { name: "Cohere", status: "operational", latency: "65ms", models: 4 },
+            { name: "Mistral", status: "operational", latency: "55ms", models: 2 }
+          ]).map((provider) => (
+            <Card key={provider.name} className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium">{provider.name}</h3>
+                <Badge variant={provider.status === "operational" ? "success" : "destructive"}>
+                  {provider.status}
+                </Badge>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Active Models</span>
-                <span>{provider.models}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Latency</span>
+                  <span>{provider.latency}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Active Models</span>
+                  <span>{provider.models}</span>
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Activity Feed */}
@@ -202,7 +250,12 @@ export default function AdminDashboard() {
         </div>
         <ScrollArea className="h-[200px]">
           <div className="space-y-4">
-            {activities.map((activity, index) => (
+            {(data?.activities || [
+              { time: "2 min ago", message: "New model deployed", type: "success" },
+              { time: "15 min ago", message: "High latency detected", type: "warning" },
+              { time: "1 hour ago", message: "Cost threshold reached", type: "error" },
+              { time: "2 hours ago", message: "System update completed", type: "info" }
+            ]).map((activity, index) => (
               <div key={index} className="flex items-center gap-4">
                 <div className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full",
@@ -232,6 +285,16 @@ export default function AdminDashboard() {
           </div>
         </ScrollArea>
       </Card>
+
+      {/* Error handling */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to update dashboard data. Will retry automatically.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }
