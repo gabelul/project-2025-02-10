@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { providerFormSchema } from "@/lib/validation/provider-schema"
+import { handleProviderError, ProviderError, ErrorTypes } from "@/lib/error-handler"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,8 +43,9 @@ export default function ProviderDetailPage({ params }) {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [formError, setFormError] = useState(null)
 
-  // Initialize form with validation
+  // Initialize form with error handling
   const form = useForm({
     resolver: zodResolver(providerFormSchema),
     defaultValues: {
@@ -59,11 +62,15 @@ export default function ProviderDetailPage({ params }) {
         enableIPWhitelist: false,
         enableRequestLogging: true,
       }
-    }
+    },
+    mode: "onChange" // Enable real-time validation
   })
 
+  // Handle form submission with error handling
   const onSubmit = async (data) => {
     setIsLoading(true)
+    setFormError(null)
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -73,11 +80,14 @@ export default function ProviderDetailPage({ params }) {
         description: "Provider configuration has been updated",
       })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save provider configuration",
-        variant: "destructive",
-      })
+      const errorResult = handleProviderError(error, toast)
+      if (errorResult) {
+        setFormError(errorResult)
+        form.setError('root', {
+          type: error.type,
+          message: error.message
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -85,6 +95,24 @@ export default function ProviderDetailPage({ params }) {
 
   return (
     <div className="space-y-6 p-8">
+      {/* Form Error Summary */}
+      {formError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {formError.message}
+            {formError.details && (
+              <ul className="mt-2 list-disc pl-4">
+                {Object.entries(formError.details).map(([key, value]) => (
+                  <li key={key}>{value}</li>
+                ))}
+              </ul>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
@@ -168,79 +196,123 @@ export default function ProviderDetailPage({ params }) {
 
         {/* Configuration Tab */}
         <TabsContent value="configuration">
-          <Card className="p-6">
-            <Form {...form}>
-              <form className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Provider Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <Card className="p-6">
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Basic Information</h3>
+                    
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Provider Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              className={form.formState.errors.name && "border-red-500"}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="apiKey"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>API Key</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Your provider API key for authentication
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="apiKey"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>API Key</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                type="password" 
+                                {...field}
+                                className={form.formState.errors.apiKey && "border-red-500"}
+                              />
+                              {form.formState.errors.apiKey && (
+                                <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="baseUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Base URL</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="baseUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Base URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="environment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Environment</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select environment" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="production">Production</SelectItem>
-                          <SelectItem value="staging">Staging</SelectItem>
-                          <SelectItem value="development">Development</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                    <FormField
+                      control={form.control}
+                      name="environment"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Environment</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select environment" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="production">Production</SelectItem>
+                              <SelectItem value="staging">Staging</SelectItem>
+                              <SelectItem value="development">Development</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Form Actions */}
+              <div className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isLoading || !form.formState.isValid}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
                   )}
-                />
-              </form>
-            </Form>
-          </Card>
+                </Button>
+              </div>
+            </form>
+          </Form>
         </TabsContent>
 
         {/* Performance Tab */}
