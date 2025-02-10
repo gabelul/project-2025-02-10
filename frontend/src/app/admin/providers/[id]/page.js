@@ -1,7 +1,11 @@
-import { use } from "react"
+"use client"
+
 import { ProviderDetail } from "@/components/providers/provider-detail"
 
-export default function ProviderDetailPage({ params }) {
-  const resolvedParams = use(params)
-  return <ProviderDetail id={resolvedParams.id} />
+export default function ProviderPage({ params }) {
+  return (
+    <div className="container mx-auto py-6">
+      <ProviderDetail id={params.id} />
+    </div>
+  )
 }
