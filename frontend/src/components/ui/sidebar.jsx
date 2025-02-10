@@ -18,10 +18,19 @@ import {
   Boxes,
   FileText,
   HelpCircle,
-  BarChart
+  BarChart,
+  Sun,
+  Moon,
+  Laptop
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const navigationItems = {
   main: [
@@ -117,7 +126,7 @@ const navigationItems = {
 export function MainSidebar({ className, isCollapsed: defaultCollapsed = false }) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
   const pathname = React.useRef("/admin")
-  const { theme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   const NavButton = React.forwardRef(({ item, ...props }, ref) => {
     const button = (
@@ -241,6 +250,78 @@ export function MainSidebar({ className, isCollapsed: defaultCollapsed = false }
               ))}
             </div>
           ))}
+      </div>
+
+      {/* Theme Toggle at Bottom */}
+      <div className="mt-auto border-t p-4">
+        {isCollapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="w-full h-9">
+                    {theme === "light" ? (
+                      <Sun className="h-4 w-4" />
+                    ) : theme === "dark" ? (
+                      <Moon className="h-4 w-4" />
+                    ) : (
+                      <Laptop className="h-4 w-4" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="right">
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    <Sun className="mr-2 h-4 w-4" />
+                    Light
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    <Moon className="mr-2 h-4 w-4" />
+                    Dark
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>
+                    <Laptop className="mr-2 h-4 w-4" />
+                    System
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              Change theme
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+              >
+                {theme === "light" ? (
+                  <Sun className="mr-2 h-4 w-4" />
+                ) : theme === "dark" ? (
+                  <Moon className="mr-2 h-4 w-4" />
+                ) : (
+                  <Laptop className="mr-2 h-4 w-4" />
+                )}
+                <span>Toggle theme</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={isCollapsed ? "end" : "start"}>
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                <Sun className="mr-2 h-4 w-4" />
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                <Moon className="mr-2 h-4 w-4" />
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                <Laptop className="mr-2 h-4 w-4" />
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   )
