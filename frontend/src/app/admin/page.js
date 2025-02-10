@@ -2,167 +2,236 @@
 
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Avatar } from "@/components/ui/avatar"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Plus, Search, CreditCard, Activity, Users, DollarSign } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { 
+  Activity, 
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  Boxes,
+  CircleDollarSign,
+  Cpu,
+  Database,
+  Server,
+  Shield,
+  Clock
+} from "lucide-react"
 
-// Sample data for charts
-const revenueData = [
-  { month: 'Jan', value: 12000 },
-  { month: 'Feb', value: 13500 },
-  { month: 'Mar', value: 14200 },
-  { month: 'Apr', value: 11800 },
-  { month: 'May', value: 15400 },
-  { month: 'Jun', value: 16200 },
-  { month: 'Jul', value: 15231.89 },
+// Sample data - replace with real data
+const performanceData = [
+  { name: "Mon", value: 400 },
+  { name: "Tue", value: 300 },
+  { name: "Wed", value: 500 },
+  { name: "Thu", value: 450 },
+  { name: "Fri", value: 470 },
+  { name: "Sat", value: 480 },
+  { name: "Sun", value: 600 }
 ]
 
-const exerciseData = [
-  { month: 'Jan', current: 65, previous: 45 },
-  { month: 'Feb', current: 75, previous: 55 },
-  { month: 'Mar', current: 85, previous: 65 },
-  { month: 'Apr', current: 95, previous: 75 },
-  { month: 'May', current: 85, previous: 85 },
-  { month: 'Jun', current: 75, previous: 65 },
-  { month: 'Jul', current: 65, previous: 55 },
+const costData = [
+  { name: "Mon", value: 120 },
+  { name: "Tue", value: 140 },
+  { name: "Wed", value: 180 },
+  { name: "Thu", value: 160 },
+  { name: "Fri", value: 150 },
+  { name: "Sat", value: 170 },
+  { name: "Sun", value: 190 }
 ]
 
-const teamMembers = [
-  { name: 'Sofia Davis', email: 'sofia@example.com', role: 'Owner' },
-  { name: 'Jackson Lee', email: 'jackson@example.com', role: 'Member' },
+const providers = [
+  { name: "OpenAI", status: "operational", latency: "45ms", models: 5 },
+  { name: "Anthropic", status: "degraded", latency: "120ms", models: 3 },
+  { name: "Cohere", status: "operational", latency: "65ms", models: 4 },
+  { name: "Mistral", status: "operational", latency: "55ms", models: 2 }
+]
+
+const activities = [
+  { time: "2 min ago", message: "New model deployed", type: "success" },
+  { time: "15 min ago", message: "High latency detected", type: "warning" },
+  { time: "1 hour ago", message: "Cost threshold reached", type: "error" },
+  { time: "2 hours ago", message: "System update completed", type: "info" }
 ]
 
 export default function AdminDashboard() {
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <div className="flex items-center space-x-2">
-          <Button>Download</Button>
-        </div>
-      </div>
-
+    <div className="flex-1 space-y-6 p-8">
       {/* Top Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="p-6">
-          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="text-sm font-medium">Total Revenue</div>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Total Requests</p>
+              <p className="text-2xl font-bold">45.2k</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Activity className="h-6 w-6 text-primary" />
+            </div>
           </div>
-          <div className="text-2xl font-bold">$15,231.89</div>
-          <div className="text-xs text-muted-foreground">
-            +20.1% from last month
-          </div>
-        </Card>
-        <Card className="p-6">
-          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="text-sm font-medium">Subscriptions</div>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-2xl font-bold">+2350</div>
-          <div className="text-xs text-muted-foreground">
-            +180.1% from last month
+          <div className="mt-4 flex items-center text-sm text-green-600">
+            <ArrowUp className="mr-1 h-4 w-4" />
+            12% from last month
           </div>
         </Card>
         <Card className="p-6">
-          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="text-sm font-medium">Active Users</div>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Active Models</p>
+              <p className="text-2xl font-bold">14</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+              <Boxes className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+            </div>
           </div>
-          <div className="text-2xl font-bold">1,234</div>
-          <div className="text-xs text-muted-foreground">
-            +19% from last month
+          <div className="mt-4 flex items-center text-sm text-blue-600">
+            <Database className="mr-1 h-4 w-4" />
+            3 new this week
           </div>
         </Card>
         <Card className="p-6">
-          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="text-sm font-medium">Active Providers</div>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Monthly Cost</p>
+              <p className="text-2xl font-bold">$2,450</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+              <CircleDollarSign className="h-6 w-6 text-green-600 dark:text-green-300" />
+            </div>
           </div>
-          <div className="text-2xl font-bold">12</div>
-          <div className="text-xs text-muted-foreground">
-            +2 from last month
+          <div className="mt-4 flex items-center text-sm text-red-600">
+            <ArrowUp className="mr-1 h-4 w-4" />
+            8% over budget
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">System Health</p>
+              <p className="text-2xl font-bold">98.2%</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
+              <Shield className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-green-600">
+            <Cpu className="mr-1 h-4 w-4" />
+            All systems normal
           </div>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Team Members */}
-        <Card className="col-span-3 p-6">
-          <div className="flex items-center justify-between pb-4">
-            <div>
-              <h3 className="text-lg font-medium">Team Members</h3>
-              <p className="text-sm text-muted-foreground">
-                Invite your team members to collaborate.
-              </p>
-            </div>
-            <Button size="sm" className="shrink-0">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Member
-            </Button>
+      {/* Charts */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium">Performance</h3>
+            <p className="text-sm text-muted-foreground">Request volume over time</p>
           </div>
-          <div className="space-y-4">
-            {teamMembers.map((member) => (
-              <div
-                key={member.email}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-8 w-8">
-                    <div className="font-medium">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {member.email}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant="secondary">{member.role}</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Charts */}
-        <Card className="col-span-4 p-6">
-          <div className="flex items-center justify-between pb-4">
-            <div>
-              <h3 className="text-lg font-medium">Exercise Minutes</h3>
-              <p className="text-sm text-muted-foreground">
-                Your exercise minutes are ahead of where you normally are.
-              </p>
-            </div>
-          </div>
-          <div className="h-[200px]">
+          <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={exerciseData}>
+              <LineChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
+                <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Line 
                   type="monotone" 
-                  dataKey="current" 
-                  stroke="#8884d8" 
-                  name="Current"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="previous" 
-                  stroke="#82ca9d" 
-                  name="Previous"
+                  dataKey="value" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2} 
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
+        <Card className="p-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium">Cost Tracking</h3>
+            <p className="text-sm text-muted-foreground">Daily cost distribution</p>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={costData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar 
+                  dataKey="value" 
+                  fill="hsl(var(--primary))" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       </div>
+
+      {/* Provider Status Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {providers.map((provider) => (
+          <Card key={provider.name} className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">{provider.name}</h3>
+              <Badge variant={provider.status === "operational" ? "success" : "destructive"}>
+                {provider.status}
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Latency</span>
+                <span>{provider.latency}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Active Models</span>
+                <span>{provider.models}</span>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Activity Feed */}
+      <Card className="p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-medium">Recent Activity</h3>
+          <p className="text-sm text-muted-foreground">System events and alerts</p>
+        </div>
+        <ScrollArea className="h-[200px]">
+          <div className="space-y-4">
+            {activities.map((activity, index) => (
+              <div key={index} className="flex items-center gap-4">
+                <div className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full",
+                  {
+                    "bg-green-100 dark:bg-green-900": activity.type === "success",
+                    "bg-yellow-100 dark:bg-yellow-900": activity.type === "warning",
+                    "bg-red-100 dark:bg-red-900": activity.type === "error",
+                    "bg-blue-100 dark:bg-blue-900": activity.type === "info",
+                  }
+                )}>
+                  <Clock className={cn(
+                    "h-4 w-4",
+                    {
+                      "text-green-600 dark:text-green-300": activity.type === "success",
+                      "text-yellow-600 dark:text-yellow-300": activity.type === "warning",
+                      "text-red-600 dark:text-red-300": activity.type === "error",
+                      "text-blue-600 dark:text-blue-300": activity.type === "info",
+                    }
+                  )} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{activity.message}</p>
+                  <p className="text-xs text-muted-foreground">{activity.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </Card>
     </div>
   )
 }
