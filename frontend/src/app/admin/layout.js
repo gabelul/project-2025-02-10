@@ -21,14 +21,14 @@ import {
 import { Input } from "@/components/ui/input"
 import {
   Breadcrumb,
+  BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
+import Link from "next/link"
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
@@ -85,16 +85,19 @@ export default function AdminLayout({ children }) {
                       {breadcrumbs.map((item, index) => (
                         <BreadcrumbItem key={item.href}>
                           {index === breadcrumbs.length - 1 ? (
-                            <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                            <span className="flex items-center text-muted-foreground">
+                              {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                              {item.label}
+                            </span>
                           ) : (
                             <>
-                              <BreadcrumbLink href={item.href} className="flex items-center">
-                                {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                                {item.label}
+                              <BreadcrumbLink asChild>
+                                <Link href={item.href} className="flex items-center">
+                                  {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                                  {item.label}
+                                </Link>
                               </BreadcrumbLink>
-                              <BreadcrumbSeparator>
-                                <ChevronRight className="h-4 w-4" />
-                              </BreadcrumbSeparator>
+                              <BreadcrumbSeparator />
                             </>
                           )}
                         </BreadcrumbItem>

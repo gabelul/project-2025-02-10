@@ -1,32 +1,68 @@
 "use client"
 
-import { usePathname } from "next/navigation"
-import Link from "next/link"
+import * as React from "react"
 import { ChevronRight } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Slot } from "@radix-ui/react-slot"
 
-export function Breadcrumbs() {
-  const pathname = usePathname()
-  const segments = pathname.split('/').filter(Boolean)
+const Breadcrumb = React.forwardRef(({ ...props }, ref) => (
+  <nav
+    ref={ref}
+    aria-label="breadcrumb"
+    {...props}
+  />
+))
+Breadcrumb.displayName = "Breadcrumb"
 
+const BreadcrumbList = React.forwardRef(({ className, ...props }, ref) => (
+  <ol
+    ref={ref}
+    className={cn(
+      "flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+BreadcrumbList.displayName = "BreadcrumbList"
+
+const BreadcrumbItem = React.forwardRef(({ className, ...props }, ref) => (
+  <li
+    ref={ref}
+    className={cn("inline-flex items-center gap-1.5", className)}
+    {...props}
+  />
+))
+BreadcrumbItem.displayName = "BreadcrumbItem"
+
+const BreadcrumbLink = React.forwardRef(({ asChild, className, ...props }, ref) => {
+  const Comp = asChild ? Slot : "a"
   return (
-    <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-      <Link 
-        href="/admin"
-        className="hover:text-foreground"
-      >
-        Admin
-      </Link>
-      {segments.slice(1).map((segment, index) => (
-        <div key={segment} className="flex items-center">
-          <ChevronRight className="h-4 w-4" />
-          <Link
-            href={`/admin/${segments.slice(1, index + 2).join('/')}`}
-            className="ml-1 capitalize hover:text-foreground"
-          >
-            {segment}
-          </Link>
-        </div>
-      ))}
-    </div>
+    <Comp
+      ref={ref}
+      className={cn("hover:text-foreground transition-colors", className)}
+      {...props}
+    />
   )
+})
+BreadcrumbLink.displayName = "BreadcrumbLink"
+
+const BreadcrumbSeparator = ({ children, className, ...props }) => (
+  <li
+    role="presentation"
+    aria-hidden="true"
+    className={cn("[&>svg]:size-3.5", className)}
+    {...props}
+  >
+    {children ?? <ChevronRight />}
+  </li>
+)
+BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
+
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
 }
