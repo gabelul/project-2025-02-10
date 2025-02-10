@@ -59,6 +59,11 @@ export function ProviderDetail({ id }) {
 
   if (!mounted) return null
 
+  // Create breadcrumb overrides with actual provider name
+  const breadcrumbOverrides = {
+    [id]: providerName || `Provider ${id}` // Use ID as fallback
+  }
+
   if (error) {
     return (
       <>
@@ -84,6 +89,7 @@ export function ProviderDetail({ id }) {
           { label: "Providers", href: "/admin/providers" },
           { label: providerName || `Provider ${id}` }
         ]} 
+        overrides={breadcrumbOverrides}
       />
       
       <Tabs defaultValue="config" className="space-y-4">

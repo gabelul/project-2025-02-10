@@ -9,10 +9,18 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useBreadcrumb } from "@/hooks/use-breadcrumb"
+import { cn } from "@/lib/utils"
 
-export function AdminBreadcrumb({ items = [] }) {
+export function AdminBreadcrumb({ 
+  className, 
+  overrides = {}, // Allow overriding specific segment labels
+  ...props 
+}) {
+  const items = useBreadcrumb()
+
   return (
-    <Breadcrumb className="mb-6">
+    <Breadcrumb className={cn("mb-6", className)} {...props}>
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
@@ -21,15 +29,23 @@ export function AdminBreadcrumb({ items = [] }) {
             </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
+
         {items.map((item, index) => (
           <BreadcrumbItem key={index}>
             <BreadcrumbSeparator />
             {item.href ? (
               <BreadcrumbLink asChild>
-                <Link href={item.href}>{item.label}</Link>
+                <Link 
+                  href={item.href}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {overrides[item.segment] || item.label}
+                </Link>
               </BreadcrumbLink>
             ) : (
-              <span className="text-foreground">{item.label}</span>
+              <span className="text-foreground">
+                {overrides[item.segment] || item.label}
+              </span>
             )}
           </BreadcrumbItem>
         ))}

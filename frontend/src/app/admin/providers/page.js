@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 import { 
   Search, 
   Server, 
@@ -194,6 +195,8 @@ export default function ProvidersPage() {
 
   return (
     <div className="space-y-6 p-8">
+      <AdminBreadcrumb />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
