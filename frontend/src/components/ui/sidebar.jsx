@@ -1,34 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { useTheme } from "next-themes"
 import { 
-  LayoutDashboard, 
-  Settings, 
-  Users, 
-  Activity,
-  Server,
-  BarChart,
-  Shield,
+  LayoutDashboard,
+  Users,
   MessageSquare,
-  Bell,
-  Boxes,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  Sun,
-  Moon
+  Settings,
+  HelpCircle,
+  AlertCircle,
+  FileText,
+  Boxes
 } from "lucide-react"
 
 const sidebarNavItems = [
   {
-    title: "Overview",
+    title: "General",
     items: [
       {
         title: "Dashboard",
@@ -36,64 +27,60 @@ const sidebarNavItems = [
         icon: LayoutDashboard,
       },
       {
-        title: "Analytics",
-        href: "/admin/analytics",
-        icon: BarChart,
+        title: "Tasks",
+        href: "/admin/tasks",
+        icon: FileText,
       },
     ],
   },
   {
-    title: "Content Management",
+    title: "Apps",
     items: [
       {
-        title: "Providers",
-        href: "/admin/providers",
-        icon: Server,
-      },
-      {
-        title: "Models",
-        href: "/admin/models",
+        title: "Apps",
+        href: "/admin/apps",
         icon: Boxes,
       },
-    ],
-  },
-  {
-    title: "System",
-    items: [
       {
-        title: "Monitoring",
-        href: "/admin/monitoring",
-        icon: Activity,
+        title: "Chats",
+        href: "/admin/chats",
+        icon: MessageSquare,
+        badge: 2,
       },
-      {
-        title: "Security",
-        href: "/admin/security",
-        icon: Shield,
-      },
-    ],
-  },
-  {
-    title: "Administration",
-    items: [
       {
         title: "Users",
         href: "/admin/users",
         icon: Users,
       },
+    ],
+  },
+  {
+    title: "Pages",
+    items: [
       {
-        title: "Messages",
-        href: "/admin/messages",
-        icon: MessageSquare,
+        title: "Auth",
+        href: "/admin/auth",
+        icon: Settings,
       },
       {
-        title: "Notifications",
-        href: "/admin/notifications",
-        icon: Bell,
+        title: "Errors",
+        href: "/admin/errors",
+        icon: AlertCircle,
       },
+    ],
+  },
+  {
+    title: "Other",
+    items: [
       {
         title: "Settings",
         href: "/admin/settings",
         icon: Settings,
+      },
+      {
+        title: "Help Center",
+        href: "/admin/help",
+        icon: HelpCircle,
       },
     ],
   },
@@ -102,67 +89,51 @@ const sidebarNavItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const { theme, setTheme } = useTheme()
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  const SidebarContent = () => (
+  return (
     <div className={cn(
-      "flex h-screen flex-col border-r bg-background transition-all duration-300",
-      isCollapsed ? "w-[80px]" : "w-64"
+      "flex flex-col border-r bg-background",
+      isCollapsed ? "w-[70px]" : "w-[200px]"
     )}>
-      <div className="p-6 flex items-center justify-between">
-        <Link href="/admin" className="flex items-center gap-2 font-semibold">
-          <Shield className="h-6 w-6" />
-          {!isCollapsed && <span>Admin Portal</span>}
+      <div className="flex h-14 lg:h-[60px] items-center border-b px-4">
+        <Link href="/admin" className="flex items-center space-x-2">
+          <Boxes className="h-6 w-6" />
+          {!isCollapsed && <span className="font-bold">Admin</span>}
         </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
       </div>
-
-      <ScrollArea className="flex-1 px-4">
-        <div className="space-y-6">
+      <ScrollArea className="flex-1 py-2">
+        <div className="space-y-4 py-2">
           {sidebarNavItems.map((group) => (
-            <div key={group.title} className="space-y-2">
+            <div key={group.title} className="px-3 py-2">
               {!isCollapsed && (
-                <h4 className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 className="mb-2 px-4 text-xs font-semibold tracking-tight text-muted-foreground">
                   {group.title}
-                </h4>
+                </h2>
               )}
-              <div className="grid gap-1">
+              <div className="space-y-1">
                 {group.items.map((item) => (
                   <Button
                     key={item.href}
                     asChild
                     variant={pathname === item.href ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full justify-start gap-2",
+                      "w-full justify-start",
                       isCollapsed && "justify-center px-2"
                     )}
-                    title={isCollapsed ? item.title : undefined}
                   >
                     <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && item.title}
+                      <item.icon className={cn(
+                        "h-4 w-4",
+                        pathname === item.href ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      {!isCollapsed && (
+                        <span className="ml-2">{item.title}</span>
+                      )}
+                      {!isCollapsed && item.badge && (
+                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   </Button>
                 ))}
@@ -171,48 +142,6 @@ export function Sidebar() {
           ))}
         </div>
       </ScrollArea>
-
-      <div className="border-t p-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className={cn(
-            "w-full",
-            isCollapsed ? "justify-center" : "justify-start gap-2"
-          )}
-        >
-          {theme === 'dark' ? (
-            <>
-              <Sun className="h-4 w-4" />
-              {!isCollapsed && "Light Mode"}
-            </>
-          ) : (
-            <>
-              <Moon className="h-4 w-4" />
-              {!isCollapsed && "Dark Mode"}
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   )
-
-  // Mobile sidebar using Sheet component
-  if (isMobile) {
-    return (
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-72">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-    )
-  }
-
-  return <SidebarContent />
 }
