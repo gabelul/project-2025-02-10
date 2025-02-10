@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -7,7 +8,7 @@ import { Activity, Settings, MessageSquare, Database } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { auth } from "@/lib/auth"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 
 export default function AdminDashboard() {
   const router = useRouter()
