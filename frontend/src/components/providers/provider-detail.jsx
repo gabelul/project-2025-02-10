@@ -7,9 +7,12 @@ import { useForm } from "react-hook-form"
 import { providerFormSchema } from "@/lib/validation/provider-schema"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
+import { getProvider, updateProvider } from "@/lib/dashboard-service"
 import { ConfigurationTab } from "./tabs/configuration-tab"
 import { PerformanceTab } from "./tabs/performance-tab"
 import { ModelsTab } from "./tabs/models-tab"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 export function ProviderDetail({ id }) {
   const [mounted, setMounted] = useState(false)
@@ -18,7 +21,6 @@ export function ProviderDetail({ id }) {
   const router = useRouter()
   const { toast } = useToast()
 
-  // Form setup with initial empty values
   const form = useForm({
     resolver: zodResolver(providerFormSchema),
     defaultValues: {
@@ -31,30 +33,16 @@ export function ProviderDetail({ id }) {
     }
   })
 
-  // Load provider data
   useEffect(() => {
     async function loadProvider() {
       try {
-        // Mock API call - replace with real API
-        const response = await fetch(`/api/providers/${id}`)
-        const data = await response.json()
-        
-        if (response.ok) {
-          // Reset form with provider data
-          form.reset(data)
-        } else {
-          setError(data.message || "Failed to load provider")
-          toast({
-            title: "Error",
-            description: "Failed to load provider details",
-            variant: "destructive",
-          })
-        }
+        const data = await getProvider(id)
+        form.reset(data)
       } catch (err) {
         setError(err.message)
         toast({
           title: "Error",
-          description: "An error occurred while loading provider details",
+          description: err.message,
           variant: "destructive",
         })
       } finally {
@@ -66,16 +54,15 @@ export function ProviderDetail({ id }) {
     loadProvider()
   }, [id, form, toast])
 
-  // Don't render until mounted to prevent hydration issues
   if (!mounted) return null
 
-  // Show error state
   if (error) {
     return (
-      <div className="rounded-lg border border-destructive p-4">
-        <h2 className="text-lg font-semibold text-destructive mb-2">Error Loading Provider</h2>
-        <p className="text-muted-foreground">{error}</p>
-      </div>
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error Loading Provider</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     )
   }
 

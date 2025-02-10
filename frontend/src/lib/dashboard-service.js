@@ -117,3 +117,34 @@ export async function fetchDashboardData() {
     ]
   }
 }
+
+export async function getProvider(id) {
+  try {
+    const response = await fetch(`/api/providers/${id}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    return data
+  } catch (error) {
+    throw new Error(`Failed to fetch provider: ${error.message}`)
+  }
+}
+
+export async function updateProvider(id, data) {
+  try {
+    const response = await fetch(`/api/providers/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return await response.json()
+  } catch (error) {
+    throw new Error(`Failed to update provider: ${error.message}`)
+  }
+}

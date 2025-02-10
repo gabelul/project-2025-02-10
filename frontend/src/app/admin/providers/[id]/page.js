@@ -3,10 +3,11 @@
 import { Suspense } from "react"
 import { useParams } from "next/navigation"
 import { ProviderDetail } from "@/components/providers/provider-detail"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-// Loading skeleton for the provider detail
 function ProviderDetailSkeleton() {
   return (
     <div className="space-y-6">
@@ -31,12 +32,24 @@ function ProviderDetailSkeleton() {
   )
 }
 
+function ErrorDisplay({ message }) {
+  return (
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription>
+        {message}
+      </AlertDescription>
+    </Alert>
+  )
+}
+
 export default function ProviderPage() {
   const params = useParams()
   const id = params?.id
 
   if (!id) {
-    return <div>Invalid provider ID</div>
+    return <ErrorDisplay message="Invalid provider ID" />
   }
 
   return (
