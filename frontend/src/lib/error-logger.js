@@ -1,51 +1,20 @@
-import { v4 as uuidv4 } from 'uuid'
-
-export const LogLevel = {
-  INFO: 'info',
-  WARN: 'warn',
-  ERROR: 'error',
-  CRITICAL: 'critical',
-  DEBUG: 'debug'
-}
-
-export const ErrorSeverity = {
-  LOW: 'low',
-  MEDIUM: 'medium',
-  HIGH: 'high',
-  CRITICAL: 'critical'
-}
-
-export const ErrorCategory = {
-  VALIDATION: 'validation',
-  API: 'api',
-  NETWORK: 'network',
-  CONFIGURATION: 'configuration',
-  SECURITY: 'security',
-  PERFORMANCE: 'performance',
-  DATABASE: 'database',
-  AUTHENTICATION: 'authentication',
-  AUTHORIZATION: 'authorization',
-  INTEGRATION: 'integration',
-  UNKNOWN: 'unknown'
-}
-
 class ErrorLogger {
   constructor() {
     this.logs = []
     this.maxLogs = 1000
     this.subscribers = new Set()
-    this.logCounter = 0
+    this.counter = 0
   }
 
-  generateId() {
-    this.logCounter += 1
-    return `error_${Date.now()}_${this.logCounter}`
+  generateErrorId() {
+    this.counter += 1
+    return `${Date.now()}_${this.counter}`
   }
 
   log(level, message, error = null, context = {}) {
     const timestamp = new Date()
     const logEntry = {
-      id: this.generateId(),
+      id: this.generateErrorId(),
       timestamp,
       level,
       message,
@@ -80,11 +49,11 @@ class ErrorLogger {
 
   consoleOutput(logEntry) {
     const styles = {
-      [LogLevel.INFO]: 'color: #3b82f6', // blue
-      [LogLevel.WARN]: 'color: #eab308', // yellow
-      [LogLevel.ERROR]: 'color: #ef4444', // red
-      [LogLevel.CRITICAL]: 'color: #7c2d12', // dark red
-      [LogLevel.DEBUG]: 'color: #8b5cf6' // purple
+      [LogLevel.INFO]: 'color: #3b82f6',
+      [LogLevel.WARN]: 'color: #eab308',
+      [LogLevel.ERROR]: 'color: #ef4444',
+      [LogLevel.CRITICAL]: 'color: #7c2d12',
+      [LogLevel.DEBUG]: 'color: #8b5cf6'
     }
 
     console.group(
@@ -137,48 +106,31 @@ class ErrorLogger {
     const now = new Date()
     const last24Hours = new Date(now - 24 * 60 * 60 * 1000)
 
-    const stats = {
-      total: 0,
+    return {
+      total: this.logs.length,
       by: {
-        level: {},
-        category: {},
-        severity: {}
+        level: this.groupBy('level'),
+        category: this.groupBy('context.category'),
+        severity: this.groupBy('context.severity')
       },
       recent: {
-        total: 0,
-        critical: 0
+        total: this.logs.filter(log => log.timestamp > last24Hours).length,
+        critical: this.logs.filter(log => 
+          log.timestamp > last24Hours && 
+          log.context.severity === ErrorSeverity.CRITICAL
+        ).length
       }
     }
+  }
 
-    this.logs.forEach(log => {
-      // Total count
-      stats.total++
-
-      // Count by level
-      stats.by.level[log.level] = (stats.by.level[log.level] || 0) + 1
-
-      // Count by category
-      if (log.context.category) {
-        stats.by.category[log.context.category] = 
-          (stats.by.category[log.context.category] || 0) + 1
+  groupBy(key) {
+    return this.logs.reduce((acc, log) => {
+      const value = key.split('.').reduce((obj, k) => obj?.[k], log)
+      if (value) {
+        acc[value] = (acc[value] || 0) + 1
       }
-
-      // Count by severity
-      if (log.context.severity) {
-        stats.by.severity[log.context.severity] = 
-          (stats.by.severity[log.context.severity] || 0) + 1
-      }
-
-      // Recent errors (last 24 hours)
-      if (log.timestamp > last24Hours) {
-        stats.recent.total++
-        if (log.context.severity === ErrorSeverity.CRITICAL) {
-          stats.recent.critical++
-        }
-      }
-    })
-
-    return stats
+      return acc
+    }, {})
   }
 
   clearLogs() {
@@ -187,9 +139,37 @@ class ErrorLogger {
   }
 }
 
+export const LogLevel = {
+  INFO: 'info',
+  WARN: 'warn',
+  ERROR: 'error',
+  CRITICAL: 'critical',
+  DEBUG: 'debug'
+}
+
+export const ErrorSeverity = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  CRITICAL: 'critical'
+}
+
+export const ErrorCategory = {
+  VALIDATION: 'validation',
+  API: 'api',
+  NETWORK: 'network',
+  CONFIGURATION: 'configuration',
+  SECURITY: 'security',
+  PERFORMANCE: 'performance',
+  DATABASE: 'database',
+  AUTHENTICATION: 'authentication',
+  AUTHORIZATION: 'authorization',
+  INTEGRATION: 'integration',
+  UNKNOWN: 'unknown'
+}
+
 export const errorLogger = new ErrorLogger()
 
-// Helper function to create detailed error context
 export function createErrorContext(category, severity, details = {}) {
   return {
     category,
@@ -199,7 +179,6 @@ export function createErrorContext(category, severity, details = {}) {
   }
 }
 
-// Helper function to log provider configuration errors
 export function logProviderError(error, context = {}) {
   const errorContext = {
     ...context,
