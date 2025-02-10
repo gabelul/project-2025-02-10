@@ -7,7 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Shield } from "lucide-react"
+import { Loader2, Shield, User } from "lucide-react"
+import Link from "next/link"
+
+const TEST_ACCOUNTS = [
+  { email: 'admin@example.com', password: 'admin123', role: 'Admin' },
+  { email: 'editor@example.com', password: 'editor123', role: 'Editor' },
+  { email: 'viewer@example.com', password: 'viewer123', role: 'Viewer' }
+]
 
 export default function HomePage() {
   const router = useRouter()
@@ -52,8 +59,19 @@ export default function HomePage() {
     }
   }
 
+  const fillTestAccount = (account) => {
+    setFormData({
+      email: account.email,
+      password: account.password
+    })
+    toast({
+      title: "Test Account Selected",
+      description: `${account.role} account credentials filled`,
+    })
+  }
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md p-8">
         <div className="space-y-6">
           <div className="text-center">
@@ -68,7 +86,6 @@ export default function HomePage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
@@ -92,6 +109,15 @@ export default function HomePage() {
               />
             </div>
 
+            <div className="flex justify-end">
+              <Link 
+                href="/reset-password" 
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             <Button 
               type="submit" 
               className="w-full"
@@ -108,11 +134,31 @@ export default function HomePage() {
             </Button>
           </form>
 
-          <div className="text-center text-sm text-gray-500">
-            <p>Test Accounts:</p>
-            <p>admin@example.com / admin123</p>
-            <p>editor@example.com / editor123</p>
-            <p>viewer@example.com / viewer123</p>
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Test Accounts
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              {TEST_ACCOUNTS.map((account) => (
+                <Button
+                  key={account.email}
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => fillTestAccount(account)}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  {account.role}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </Card>
