@@ -1,20 +1,20 @@
 import { NextResponse } from 'next/server'
 
-export async function middleware(request) {
-  const authCookie = request.cookies.get('auth')
-  
+export function middleware(request) {
   // Check if the request is for the admin section
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!authCookie) {
+    const authToken = request.cookies.get('auth-token')
+    
+    if (!authToken) {
       // Redirect to login page
       return NextResponse.redirect(new URL('/', request.url))
     }
 
     try {
-      const user = JSON.parse(authCookie.value)
+      const userData = JSON.parse(authToken.value)
       
-      // Basic role checking - could be more granular
-      if (!user.role) {
+      // Basic role checking
+      if (!userData.role) {
         return NextResponse.redirect(new URL('/', request.url))
       }
       
@@ -24,7 +24,7 @@ export async function middleware(request) {
       }
       
       // Restrict sensitive paths to admin role
-      if (request.nextUrl.pathname.includes('/providers') && user.role !== 'admin') {
+      if (request.nextUrl.pathname.includes('/providers') && userData.role !== 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url))
       }
       
