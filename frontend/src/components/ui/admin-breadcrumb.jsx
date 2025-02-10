@@ -1,55 +1,36 @@
 "use client"
 
 import Link from "next/link"
-import { Home } from "lucide-react"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { useBreadcrumb } from "@/hooks/use-breadcrumb"
-import { cn } from "@/lib/utils"
+import { Home, ChevronRight } from "lucide-react"
 
-export function AdminBreadcrumb({ 
-  className, 
-  overrides = {}, // Allow overriding specific segment labels
-  ...props 
-}) {
-  const items = useBreadcrumb()
-
+export function AdminBreadcrumb({ segments = [] }) {
   return (
-    <Breadcrumb className={cn("mb-6", className)} {...props}>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="/admin" className="flex items-center">
-              <Home className="h-4 w-4" />
-            </Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-
-        {items.map((item, index) => (
-          <BreadcrumbItem key={index}>
-            <BreadcrumbSeparator />
-            {item.href ? (
-              <BreadcrumbLink asChild>
-                <Link 
-                  href={item.href}
-                  className="hover:text-foreground transition-colors"
-                >
-                  {overrides[item.segment] || item.label}
-                </Link>
-              </BreadcrumbLink>
+    <nav className="flex mb-6" aria-label="Breadcrumb">
+      <ol className="flex items-center space-x-2">
+        <li>
+          <Link 
+            href="/admin" 
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Home className="h-4 w-4" />
+          </Link>
+        </li>
+        {segments.map((segment, index) => (
+          <li key={index} className="flex items-center">
+            <ChevronRight className="h-4 w-4 text-muted-foreground mx-2" />
+            {typeof segment === 'string' ? (
+              <span className="text-foreground">{segment}</span>
             ) : (
-              <span className="text-foreground">
-                {overrides[item.segment] || item.label}
-              </span>
+              <Link
+                href={segment.href}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {segment.label}
+              </Link>
             )}
-          </BreadcrumbItem>
+          </li>
         ))}
-      </BreadcrumbList>
-    </Breadcrumb>
+      </ol>
+    </nav>
   )
 }

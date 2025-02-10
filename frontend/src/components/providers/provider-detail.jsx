@@ -2,52 +2,31 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { providerFormSchema } from "@/lib/validation/provider-schema"
+import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
-import { getProvider, updateProvider } from "@/lib/dashboard-service"
+import { Card } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 import { ConfigurationTab } from "./tabs/configuration-tab"
 import { PerformanceTab } from "./tabs/performance-tab"
 import { ModelsTab } from "./tabs/models-tab"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
-import { AdminBreadcrumb } from "@/components/ui/admin-breadcrumb"
 
 export function ProviderDetail({ id }) {
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [providerName, setProviderName] = useState("")
+  const [provider, setProvider] = useState(null)
   const router = useRouter()
-  const { toast } = useToast()
-
-  const form = useForm({
-    resolver: zodResolver(providerFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      apiKey: "",
-      baseUrl: "",
-      environment: "development",
-      // ... other default values
-    }
-  })
 
   useEffect(() => {
     async function loadProvider() {
       try {
-        const data = await getProvider(id)
-        form.reset(data)
-        setProviderName(data.name)
+        const response = await fetch(`/api/providers/${id}`)
+        if (!response.ok) throw new Error('Failed to load provider')
+        const data = await response.json()
+        setProvider(data)
       } catch (err) {
         setError(err.message)
-        toast({
-          title: "Error",
-          description: err.message,
-          variant: "destructive",
-        })
       } finally {
         setIsLoading(false)
         setMounted(true)
@@ -55,44 +34,33 @@ export function ProviderDetail({ id }) {
     }
 
     loadProvider()
-  }, [id, form, toast])
+  }, [id])
 
   if (!mounted) return null
 
-  // Create breadcrumb overrides with actual provider name
-  const breadcrumbOverrides = {
-    [id]: providerName || `Provider ${id}` // Use ID as fallback
-  }
-
   if (error) {
     return (
-      <>
-        <AdminBreadcrumb 
-          items={[
-            { label: "Providers", href: "/admin/providers" },
-            { label: "Error" }
-          ]} 
-        />
+      <div className="space-y-6">
+        <AdminBreadcrumb segments={["Providers", "Error"]} />
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error Loading Provider</AlertTitle>
+          <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-      </>
+      </div>
     )
   }
 
+  const breadcrumbSegments = [
+    { label: "Providers", href: "/admin/providers" },
+    provider?.name || `Provider ${id}`
+  ]
+
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb 
-        items={[
-          { label: "Providers", href: "/admin/providers" },
-          { label: providerName || `Provider ${id}` }
-        ]} 
-        overrides={breadcrumbOverrides}
-      />
+      <AdminBreadcrumb segments={breadcrumbSegments} />
       
-      <Tabs defaultValue="config" className="space-y-4">
+      <Tabs defaultValue="config" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="config">Configuration</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -100,7 +68,7 @@ export function ProviderDetail({ id }) {
         </TabsList>
 
         <TabsContent value="config">
-          <ConfigurationTab form={form} />
+          <ConfigurationTab provider={provider} />
         </TabsContent>
 
         <TabsContent value="performance">
@@ -108,7 +76,7 @@ export function ProviderDetail({ id }) {
         </TabsContent>
 
         <TabsContent value="models">
-          <ModelsTab providerId={id} form={form} />
+          <ModelsTab providerId={id} />
         </TabsContent>
       </Tabs>
     </div>
