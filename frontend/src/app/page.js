@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Shield, User } from "lucide-react"
 import Link from "next/link"
+import { setSession } from "@/lib/auth"
 
 const TEST_ACCOUNTS = [
   { email: 'admin@example.com', password: 'admin123', role: 'Admin' },
@@ -30,6 +31,8 @@ export default function HomePage() {
     setIsLoading(true)
 
     try {
+      console.log('Submitting:', formData) // Add logging
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -39,10 +42,14 @@ export default function HomePage() {
       })
 
       const data = await response.json()
+      console.log('Response:', data) // Add logging
 
       if (!response.ok) {
         throw new Error(data.error || 'Login failed')
       }
+
+      // Store session data
+      setSession(data.user)
 
       toast({
         title: "Login successful",
@@ -51,6 +58,7 @@ export default function HomePage() {
       
       router.push('/admin')
     } catch (error) {
+      console.error('Login error:', error) // Add logging
       toast({
         title: "Login failed",
         description: error.message,
