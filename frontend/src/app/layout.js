@@ -16,9 +16,7 @@ export default function RootLayout({ children }) {
           disableTransitionOnChange
           suppressHydrationWarning
         >
-          <div className="flex min-h-screen bg-background">
-            {children}
-          </div>
+          {children}
         </ThemeProvider>
       </body>
     </html>

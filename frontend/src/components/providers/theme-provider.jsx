@@ -3,5 +3,11 @@
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 
 export function ThemeProvider({ children, ...props }) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  return (
+    <NextThemesProvider {...props}>
+      <div className="min-h-screen bg-background">
+        {children}
+      </div>
+    </NextThemesProvider>
+  )
 }
