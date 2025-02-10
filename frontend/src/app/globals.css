@@ -96,3 +96,9 @@ body {
 .animate-shake {
   animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
 }
+
+@layer utilities {
+  .sidebar-animation {
+    @apply transition-all duration-300 ease-in-out;
+  }
+}

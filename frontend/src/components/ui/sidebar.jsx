@@ -1,78 +1,279 @@
+"use client"
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   ChevronRight,
+  LayoutDashboard,
   Settings,
-  History,
-  Star,
-  FileText,
+  Activity,
+  Server,
+  Shield,
   Users,
-  Plane,
-  MoreHorizontal,
-  Building2
+  MessageSquare,
+  Bell,
+  ChevronLeft,
+  MonitorDot,
+  Boxes,
+  FileText,
+  HelpCircle,
+  BarChart
 } from "lucide-react"
 
-const Sidebar = React.forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("pb-12", className)} {...props} />
-))
-Sidebar.displayName = "Sidebar"
+const navigationItems = {
+  main: [
+    {
+      title: "Overview",
+      items: [
+        {
+          title: "Dashboard",
+          icon: LayoutDashboard,
+          href: "/admin",
+        },
+        {
+          title: "Analytics",
+          icon: BarChart,
+          href: "/admin/analytics",
+        },
+        {
+          title: "Monitoring",
+          icon: Activity,
+          href: "/admin/monitoring",
+        },
+      ],
+    }
+  ],
+  management: [
+    {
+      title: "Content",
+      items: [
+        {
+          title: "Providers",
+          icon: Server,
+          href: "/admin/providers",
+        },
+        {
+          title: "Models",
+          icon: Boxes,
+          href: "/admin/models",
+        },
+        {
+          title: "Tasks",
+          icon: FileText,
+          href: "/admin/tasks",
+          badge: "New"
+        },
+      ],
+    }
+  ],
+  system: [
+    {
+      title: "System",
+      items: [
+        {
+          title: "Security",
+          icon: Shield,
+          href: "/admin/security",
+        },
+        {
+          title: "Users",
+          icon: Users,
+          href: "/admin/users",
+        },
+        {
+          title: "Messages",
+          icon: MessageSquare,
+          href: "/admin/messages",
+          badge: "3"
+        },
+        {
+          title: "Notifications",
+          icon: Bell,
+          href: "/admin/notifications",
+        },
+      ],
+    },
+    {
+      title: "Support",
+      items: [
+        {
+          title: "Settings",
+          icon: Settings,
+          href: "/admin/settings",
+        },
+        {
+          title: "Help",
+          icon: HelpCircle,
+          href: "/admin/help",
+        },
+      ],
+    }
+  ],
+}
 
-const SidebarItem = React.forwardRef(({ className, icon: Icon, children, ...props }, ref) => (
-  <Button
-    ref={ref}
-    variant="ghost"
-    className={cn(
-      "w-full justify-start gap-2 font-normal",
-      className
-    )}
-    {...props}
-  >
-    {Icon && <Icon className="h-4 w-4" />}
-    {children}
-  </Button>
-))
-SidebarItem.displayName = "SidebarItem"
+export function MainSidebar({ className, isCollapsed: defaultCollapsed = false }) {
+  const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
+  const pathname = React.useRef("/admin")
 
-const SidebarGroup = React.forwardRef(({ title, children, className, ...props }, ref) => (
-  <div ref={ref} className={cn("space-y-1", className)} {...props}>
-    <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">{title}</h2>
-    {children}
-  </div>
-))
-SidebarGroup.displayName = "SidebarGroup"
-
-export function MainSidebar({ className }) {
   return (
-    <Sidebar className={cn("w-64 border-r bg-background", className)}>
-      <div className="flex h-14 items-center border-b px-4">
-        <Button variant="ghost" className="gap-2 font-semibold">
-          <Building2 className="h-5 w-5" />
-          Acme Inc
+    <div
+      className={cn(
+        "relative flex flex-col h-screen border-r bg-background duration-300 ease-in-out",
+        isCollapsed ? "w-[70px]" : "w-[240px]",
+        className
+      )}
+    >
+      {/* Header */}
+      <div className="flex h-[60px] items-center justify-between px-4 border-b">
+        <div className="flex items-center gap-2">
+          <MonitorDot className="h-6 w-6" />
+          {!isCollapsed && (
+            <span className="font-semibold">Admin Portal</span>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
         </Button>
       </div>
-      
-      <div className="space-y-4 py-4">
-        <div className="px-4 py-2">
-          <h2 className="mb-2 text-sm font-medium">Platform</h2>
-          <div className="space-y-1">
-            <SidebarItem icon={FileText}>Playground</SidebarItem>
-            <SidebarItem icon={History}>History</SidebarItem>
-            <SidebarItem icon={Star}>Starred</SidebarItem>
-            <SidebarItem icon={Settings}>Settings</SidebarItem>
-          </div>
+
+      {/* Navigation */}
+      <div className="flex-1 overflow-auto">
+        {/* Main Navigation */}
+        <div className="px-3 py-2">
+          {navigationItems.main.map((group) => (
+            <div key={group.title} className="pb-4">
+              {!isCollapsed && (
+                <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+                  {group.title}
+                </h2>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <Button
+                    key={item.href}
+                    variant={pathname.current === item.href ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start",
+                      isCollapsed && "justify-center px-2",
+                      pathname.current === item.href && "bg-secondary"
+                    )}
+                    asChild
+                  >
+                    <a href={item.href} className="flex items-center gap-2">
+                      <item.icon className={cn(
+                        "h-4 w-4",
+                        pathname.current === item.href ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      {!isCollapsed && (
+                        <span>{item.title}</span>
+                      )}
+                      {!isCollapsed && item.badge && (
+                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          {item.badge}
+                        </span>
+                      )}
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="px-4 py-2">
-          <h2 className="mb-2 text-sm font-medium">Projects</h2>
-          <div className="space-y-1">
-            <SidebarItem icon={Building2}>Design Engineering</SidebarItem>
-            <SidebarItem icon={Users}>Sales & Marketing</SidebarItem>
-            <SidebarItem icon={Plane}>Travel</SidebarItem>
-            <SidebarItem icon={MoreHorizontal}>More</SidebarItem>
-          </div>
+        {/* Management */}
+        <div className="px-3 py-2">
+          {navigationItems.management.map((group) => (
+            <div key={group.title} className="pb-4">
+              {!isCollapsed && (
+                <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+                  {group.title}
+                </h2>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <Button
+                    key={item.href}
+                    variant={pathname.current === item.href ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start",
+                      isCollapsed && "justify-center px-2",
+                      pathname.current === item.href && "bg-secondary"
+                    )}
+                    asChild
+                  >
+                    <a href={item.href} className="flex items-center gap-2">
+                      <item.icon className={cn(
+                        "h-4 w-4",
+                        pathname.current === item.href ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      {!isCollapsed && (
+                        <span>{item.title}</span>
+                      )}
+                      {!isCollapsed && item.badge && (
+                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          {item.badge}
+                        </span>
+                      )}
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* System */}
+        <div className="px-3 py-2">
+          {navigationItems.system.map((group) => (
+            <div key={group.title} className="pb-4">
+              {!isCollapsed && (
+                <h2 className="mb-2 px-2 text-xs font-semibold tracking-tight text-muted-foreground">
+                  {group.title}
+                </h2>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <Button
+                    key={item.href}
+                    variant={pathname.current === item.href ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start",
+                      isCollapsed && "justify-center px-2",
+                      pathname.current === item.href && "bg-secondary"
+                    )}
+                    asChild
+                  >
+                    <a href={item.href} className="flex items-center gap-2">
+                      <item.icon className={cn(
+                        "h-4 w-4",
+                        pathname.current === item.href ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      {!isCollapsed && (
+                        <span>{item.title}</span>
+                      )}
+                      {!isCollapsed && item.badge && (
+                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          {item.badge}
+                        </span>
+                      )}
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    </Sidebar>
+    </div>
   )
 }
