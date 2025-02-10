@@ -9,7 +9,7 @@ export default function AdminLayout({ children }) {
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex h-screen">
-            <Sidebar className="relative flex flex-col h-screen border-r transition-all duration-300" />
+            <Sidebar />
             <main className="flex-1 overflow-y-auto">
               <div className="flex h-[60px] items-center justify-between px-4 border-b bg-background">
                 <div className="flex items-center gap-2">
