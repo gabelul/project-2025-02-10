@@ -1,4 +1,7 @@
-"use client"
+"use server"
+
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export const ROLES = {
   ADMIN: 'admin',
@@ -12,53 +15,50 @@ const USERS = {
   'viewer@example.com': { password: 'viewer123', role: ROLES.VIEWER }
 }
 
-export const auth = {
-  user: null,
-
-  login: async (email, password) => {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    const user = USERS[email]
-    if (user && user.password === password) {
-      const userData = {
-        email,
-        role: user.role,
-        timestamp: new Date().toISOString()
-      }
-      localStorage.setItem('user', JSON.stringify(userData))
-      auth.user = userData
-      return userData
+export async function login(email, password) {
+  const user = USERS[email]
+  
+  if (user && user.password === password) {
+    const userData = {
+      email,
+      role: user.role,
+      timestamp: new Date().toISOString()
     }
-    throw new Error("Invalid credentials")
-  },
-
-  logout: () => {
-    auth.user = null
-    localStorage.removeItem('user')
-  },
-
-  checkAuth: () => {
-    if (typeof window !== 'undefined') {
-      const userData = localStorage.getItem('user')
-      if (userData) {
-        auth.user = JSON.parse(userData)
-        return auth.user
-      }
-    }
-    return null
-  },
-
-  hasRole: (requiredRole) => {
-    const user = auth.checkAuth()
-    if (!user) return false
     
-    // Admin has access to everything
-    if (user.role === ROLES.ADMIN) return true
+    cookies().set('auth', JSON.stringify(userData), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 // 24 hours
+    })
     
-    // Editor has access to editor and viewer content
-    if (user.role === ROLES.EDITOR && requiredRole === ROLES.VIEWER) return true
-    
-    // Direct role match
-    return user.role === requiredRole
+    return userData
   }
+  
+  throw new Error('Invalid credentials')
+}
+
+export async function logout() {
+  cookies().delete('auth')
+  redirect('/')
+}
+
+export async function getUser() {
+  const authCookie = cookies().get('auth')
+  if (!authCookie) return null
+  
+  try {
+    return JSON.parse(authCookie.value)
+  } catch {
+    return null
+  }
+}
+
+export async function checkRole(requiredRole) {
+  const user = await getUser()
+  if (!user) return false
+  
+  if (user.role === ROLES.ADMIN) return true
+  if (user.role === ROLES.EDITOR && requiredRole === ROLES.VIEWER) return true
+  return user.role === requiredRole
 }

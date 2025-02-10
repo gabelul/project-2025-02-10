@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Shield } from "lucide-react"
-import { auth } from "@/lib/auth"
 
 export default function HomePage() {
   const router = useRouter()
@@ -19,22 +18,27 @@ export default function HomePage() {
     password: "",
   })
 
-  useEffect(() => {
-    const user = auth.checkAuth()
-    if (user) {
-      router.push('/admin')
-    }
-  }, [router])
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      const user = await auth.login(formData.email, formData.password)
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Login failed')
+      }
+
+      const data = await response.json()
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.role.toUpperCase()}`,
+        description: `Welcome back, ${data.role.toUpperCase()}`,
       })
       router.push('/admin')
     } catch (error) {

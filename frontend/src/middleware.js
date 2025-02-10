@@ -1,30 +1,35 @@
 import { NextResponse } from 'next/server'
-import { auth, ROLES } from './lib/auth'
 
-const ROLE_PATHS = {
-  '/admin/providers': ROLES.ADMIN,
-  '/admin/settings': ROLES.ADMIN,
-  '/admin/monitoring': ROLES.EDITOR,
-  '/admin': ROLES.VIEWER
-}
-
-export function middleware(request) {
+export async function middleware(request) {
+  const authCookie = request.cookies.get('auth')
+  
   // Check if the request is for the admin section
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    const user = auth.checkAuth()
-    
-    if (!user) {
+    if (!authCookie) {
       // Redirect to login page
       return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // Check role-based access
-    const path = request.nextUrl.pathname
-    const requiredRole = ROLE_PATHS[path] || ROLES.ADMIN
-
-    if (!auth.hasRole(requiredRole)) {
-      // Redirect to admin dashboard if user doesn't have required role
-      return NextResponse.redirect(new URL('/admin', request.url))
+    try {
+      const user = JSON.parse(authCookie.value)
+      
+      // Basic role checking - could be more granular
+      if (!user.role) {
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+      
+      // Allow access to admin dashboard for all authenticated users
+      if (request.nextUrl.pathname === '/admin') {
+        return NextResponse.next()
+      }
+      
+      // Restrict sensitive paths to admin role
+      if (request.nextUrl.pathname.includes('/providers') && user.role !== 'admin') {
+        return NextResponse.redirect(new URL('/admin', request.url))
+      }
+      
+    } catch {
+      return NextResponse.redirect(new URL('/', request.url))
     }
   }
   
