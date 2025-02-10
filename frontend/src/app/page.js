@@ -44,17 +44,13 @@ export default function HomePage() {
         throw new Error(data.error || 'Login failed')
       }
 
-      if (data.success) {
-        toast({
-          title: "Login successful",
-          description: `Welcome back, ${data.user.role.toUpperCase()}`,
-        })
-        router.push('/admin')
-      } else {
-        throw new Error(data.error || 'Login failed')
-      }
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${data.user.role.toUpperCase()}`,
+      })
+      
+      router.push('/admin')
     } catch (error) {
-      console.error('Login error:', error)
       toast({
         title: "Login failed",
         description: error.message,
